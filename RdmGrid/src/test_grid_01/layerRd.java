@@ -1,14 +1,13 @@
-package test_grid;
+package test_grid_01;
 
-import javax.swing.text.GapContent;
+import test_grid_01.grid.typeInitialization;
 
-import test_grid.grid.typeInitialization;
-
-public class layerRd{
+public class layerRd {
 	
 	private int numberCellX, numberCellY;
 	private double sizeCellX, sizeCellY;
 
+	private  double f ,  k ,  Da,  Db ;
 	private grid g1 , g2 ;
 	
 	// constructor
@@ -25,20 +24,47 @@ public class layerRd{
 		g2 = new grid("b",sizeCellX, sizeCellY, numberCellX, numberCellY);		
 	}
 	
-// initialization grid ------------------------------------------------------------------------------------------------------------------------------
+// INITIALIZATION GRID ------------------------------------------------------------------------------------------------------------------------------
+	
+	//initialize grid with val cost
 	public void initializeRdCost (String idGrid , double val) {	
 		grid g = getGrid(idGrid);		
 		g.setValCost(10);
 		g.initializeGrid(typeInitialization.cost);
 	}
-	
+
+	//initialize grid with val random
 	public void initializeRdRandom (String idGrid , int seedRd ,  double minRd , double maxRd) {	
 		grid g = getGrid(idGrid);		
 		g.setValRandom(seedRd, minRd, maxRd);
 		g.initializeGrid(typeInitialization.random);
 	}
 	
+	
+	public void updateGs ( ) {
+		// get list cell actives
+	
+		
+		
+		
+	}
+
+// RULES --------------------------------------------------------------------------------------------------------------------------------------------
+	
+// Gray Scott classic model -------------------------------------------------------------------------------------------------------------------------
+	
+	// set initial parameters of gray scott model
+	public void setGsParams ( double f , double k , double Da, double Db) {
+		this.k = k ;
+		this.f = f ;
+		this.Da = Da ;
+		this.Db = Db ;
+	}
+	
+	
+	
 // GET METHODS --------------------------------------------------------------------------------------------------------------------------------------
+	// get grid from id
 	private grid getGrid ( String idGrid ) {
 		grid g = null ;
 		if ( idGrid.equals(g1.getId())) 
@@ -54,6 +80,16 @@ public class layerRd{
 		
 	}
 	
+// PRINT METHODS ------------------------------------------------------------------------------------------------------------------------------------
+	// print row
+	public void printRow ( String idGrid, int row ) {
+		getGrid(idGrid).printValRow(row);
+	}
 
+	// print grid
+	public void printGrid ( String idGrid) {
+		getGrid(idGrid).printGrid();
+	}
 	
+
 }

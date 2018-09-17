@@ -1,10 +1,12 @@
-package test_grid;
+package test_grid_01;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-public class grid {
+
+
+public  class grid {
 	
 	private double[][] cells ;
 	private  double sizeX, sizeY;
@@ -45,9 +47,11 @@ public class grid {
 			}	break;
 		}		
 	}
+
+// LIST CELLS ACTIVES -------------------------------------------------------------------------------------------------------------------------------
+
 	
-// RULES --------------------------------------------------------------------------------------------------------------------------------------------
-	
+// GET METHODS --------------------------------------------------------------------------------------------------------------------------------------	
 	public ArrayList<Double> getVonNeumannNeighbors ( int cellX, int cellY) {	
 		return new ArrayList<Double> (Arrays.asList(
 				cells[cellX][cellY+1],
@@ -83,13 +87,12 @@ public class grid {
 		return 	cells[cellX][cellY];
 	}
 	
+	//get id grid
 	public String getId () {
 		return idGrid;
 	}
-
 		
-// SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
-	
+// SET METHODS --------------------------------------------------------------------------------------------------------------------------------------	
 	public void setValCell (double val , int cellX, int cellY ) {
 		cells[cellX][cellY] = val ;
 	}
