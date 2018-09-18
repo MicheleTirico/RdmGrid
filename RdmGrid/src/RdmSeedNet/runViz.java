@@ -1,11 +1,11 @@
-package test_grid_02;
+package RdmSeedNet;
 
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 
-import test_grid_02.layerRd.morphogen;
-import test_grid_02.layerRd.typeDiffusion;
+import RdmSeedNet.framework.morphogen;
+import RdmSeedNet.layerRd.typeDiffusion;
 
 import java.awt.geom.*;
 
@@ -34,7 +34,7 @@ class LifePanel extends JPanel implements ActionListener{
 	int t;
 
 	static double  f = 0.014, k=0.054, Da = 0.2, Db = 0.1 ;	
-	private static layerRd lRd = new layerRd(1.0, 0, 500, 500);
+	private static layerRd lRd = new layerRd(1.0, 0, 300, 300);
 	
 	  public LifePanel() {
 		  setPreferredSize(new Dimension(300, 300));

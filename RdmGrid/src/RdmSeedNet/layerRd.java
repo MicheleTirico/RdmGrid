@@ -1,12 +1,12 @@
-package test_grid_02;
+package RdmSeedNet;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
-import RdmSeedNet.framework;
+import RdmSeedNet.framework.morphogen;
 
-public class layerRd extends framework {
+public class layerRd extends framework  {
 
 	private double sizeX, sizeY;
 	private int numCellX, numCellY;
@@ -15,10 +15,10 @@ public class layerRd extends framework {
 	
 	public enum typeNeighbourhood { moore, vonNewmann , m_vn }
 	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
-	public enum morphogen { a , b }
+
 	
 	private typeDiffusion typeDiffusion ; 
-	
+
 	
 	public layerRd ( ) {
 		this(0,0,0,0);	
@@ -57,12 +57,12 @@ public class layerRd extends framework {
 	// Gray Scott classic model -------------------------------------------------------------------------------------------------------------------------
 		
 	// set initial parameters of gray scott model
-	public void setGsParameters ( double f , double k , double Da, double Db, typeDiffusion typeDiffusion) {
+	public void setGsParameters ( double f , double k , double Da, double Db, typeDiffusion mooreweigthed) {
 		this.k = k ;
 		this.f = f ;
 		this.Da = Da ;
 		this.Db = Db ;
-		this.typeDiffusion = typeDiffusion;
+		this.typeDiffusion = mooreweigthed;
 	}
 	
 	// set perturbation 
@@ -88,21 +88,9 @@ public class layerRd extends framework {
 			
 					extA = f * ( 1 - valA ) ,
 					extB = ( f + k ) * valB ;
-	//		extA = 0 ;
-	//		extB = 0 ; 
 	
 			double	newValA =  valA + diffA - react + extA,
 					newValB =  valB + diffB + react - extB;
-//			System.out.println(f + " " + k+" " + getDiffusionCost(typeDiffusion, c, a) ); 
-			
-//			if ( react > 0 )					System.out.println(c.getX() +" " + c.getY() + " " + react);
-			
-//			if ( extA != 0 )			System.out.println("extA " + c.getX() +" " + c.getY() + " " + extA);
-			
-//			if ( diffA >= .1 )				System.out.println("diffA " + c.getX() +" " + c.getY() + " " + diffA);
-			
-//			if ( diffB >= 0.1 )				System.out.println("diffB " + c.getX() +" " + c.getY() + " " + diffB);
-			
 			c.setVals(newValA, newValB);
 		}
 	}
@@ -209,8 +197,8 @@ public class layerRd extends framework {
 		return minRd + (maxRd - minRd) * rd.nextDouble(); 
 	}
 
-	// get val morphogen in cell 
-	private double getValMorp ( cell c, morphogen m) {		
+	// get value of morphogen 
+	protected double getValMorp ( cell c, morphogen m) {		
 		if ( m.equals(morphogen.a))
 			return c.getVal1();
 		else
@@ -226,7 +214,7 @@ public class layerRd extends framework {
 	}
 	
 // GET NEIGHBORS ------------------------------------------------------------------------------------------------------------------------------------	 
-	private ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
+	ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
 		ArrayList<cell> list = new  ArrayList<cell> ();		
 		switch (typeNeighbourhood) {
 			case moore: {
@@ -281,7 +269,7 @@ public class layerRd extends framework {
 			listCell.add(c);
 	}
  
-	public ArrayList<cell> getlistCell () {
+	public ArrayList<cell> getListCellActive () {
 		return listCell;		
 	}
 	
