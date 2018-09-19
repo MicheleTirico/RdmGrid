@@ -29,7 +29,7 @@ public class layerSeed extends framework {
 	
 		this.m = m ; 
 		for ( cell c : listCell ) {
-			double val = lRd.getValMorp(c, m) ;
+			double val = lRd.getValMorp(c, m, true) ;
 			if (val >= minTh && val <= maxTh)
 				createSeed(c.getX(), c.getY());
 		}
@@ -45,6 +45,24 @@ public class layerSeed extends framework {
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------
 	
 	public void updateLayer() {
+		for (seed s : seeds) {
+			double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0;
+			for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
+				for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {
+					cell c = lRd.getCell(x,y);
+					double val = lRd.getValMorp(c, m, true) ;
+					vecX = vecX + ceckPositionVector(c.getX(),s.getX(),val) ;
+					vecY = vecY + ceckPositionVector(c.getY(),s.getY(),val) ;
+				}
+			vecX = checkValueVector(vecX, 1) ;
+			vecY = checkValueVector(vecY, 1) ;
+			
+			s.setVec(vecX, vecY);	
+			s.setCoords(sX + vecX , sY + vecY);	
+		}
+	}
+		
+	public void updateLayer3() {
 		
 		for ( seed s : seeds ) {
 			double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0;
@@ -58,15 +76,15 @@ public class layerSeed extends framework {
 			for ( cell c : listCell) {
 		//		System.out.println(c.getX() + " " + c.getY());
 				
-				double 	val = lRd.getValMorp(c, m) ;
+				double 	val = lRd.getValMorp(c, m, false) ;
 		
 				if ( val > 1 )
 					val = 1 ; 
 				
-				double v = ceckVector(c.getX(),s.getX(),val);
+				double v = ceckPositionVector(c.getX(),s.getX(),val);
 		//		System.out.println(v);
-				vecX = vecX + ceckVector(c.getX(),s.getX(),val) ;
-				vecY = vecY + ceckVector(c.getY(),s.getY(),val) ;
+				vecX = vecX + ceckPositionVector(c.getX(),s.getX(),val) ;
+				vecY = vecY + ceckPositionVector(c.getY(),s.getY(),val) ;
 	//			System.out.println(getVector(c.getX(), sX, val));
 			}
 			
@@ -80,12 +98,23 @@ public class layerSeed extends framework {
 			if (vecY < - 1 )				vecY = - 1 ;
 			s.setVec(vecX, vecY);
 	
+			//s.setCoords(sX + vecX , sY + vecY);
 			s.setX( sX + vecX );
 			s.setY( sY + vecY );
 		
 		}
 	}
-	public double ceckVector (double posCell , double posSeed, double val) {
+	
+	private double checkValueVector (double vec , double valMax) { 
+		if (vec > valMax )				
+			return  valMax ;
+		else if (vec < - valMax )				
+			return - valMax ;
+		else 
+			return vec;
+	}
+	
+	private double ceckPositionVector (double posCell , double posSeed, double val) {
 		double v = Ds * g * val / Math.pow(posCell - posSeed, alfa);
 		if ( posCell == posSeed)
 			return 0 ;
@@ -128,7 +157,7 @@ public class layerSeed extends framework {
 			for ( int y = (int) Math.floor(s.getY() - r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {
 			//	System.out.println( s.getX() );
 
-				double 	val = lRd.getValMorp(lRd.getCell(x, y), m) ;
+				double 	val = lRd.getValMorp(lRd.getCell(x, y), m, false) ;
 				if ( val > 1 )
 					val = 1 ;
 				
@@ -156,9 +185,7 @@ public class layerSeed extends framework {
 		
 		return list;
 	}
-	
-	
-	
+		
 	private double getVector (double posCell, double posSeed, double val ) {
 		
 		double sign = getSignVec(posCell , posSeed ) ;	

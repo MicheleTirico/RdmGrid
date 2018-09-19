@@ -70,12 +70,18 @@ public class layerRd extends framework  {
 		cells[cellX][cellY].setVals(valA, valB);		
 	}
 	
+	public void setValueOfCellAround  ( double valA , double valB , int cellX, int cellY, int radius ) {
+		for ( int x = (int) Math.floor(cellX - radius) ; x <= (int) Math.ceil(cellX + radius ) ; x++  )
+			for ( int y = (int) Math.floor(cellY - radius ) ; y <= (int) Math.ceil(cellY + radius ) ; y++  ) 
+				cells[x][y].setVals(valA, valB);			
+	}
+	
 	// update cells 
 	public void updateLayer (  ) {
 			
 		for ( cell c :listCell ) {
-			double 	valA = getValMorp(c, morphogen.a),
-					valB = getValMorp(c, morphogen.b);
+			double 	valA = getValMorp(c, morphogen.a, false),
+					valB = getValMorp(c, morphogen.b, false);
 			
 			morphogen a = morphogen.a ;
 			morphogen b = morphogen.b ;
@@ -97,7 +103,7 @@ public class layerRd extends framework  {
 	// get Fick's diffusion 
 	private double getDiffusion ( typeDiffusion typeDiffusion, cell c , morphogen m ) {
 		double 	diff = 0 , 
-				val = getValMorp(c, m) ,
+				val = getValMorp(c, m, false) ,
 				valNeig = 0,
 				valNeigS = 0 ,	// sum of values of side neighbors 
 				valNeigC = 0;	// sum of values of corner neighbors	
@@ -108,7 +114,7 @@ public class layerRd extends framework  {
 				listNeig = getListNeighbors(typeNeighbourhood.moore, c.getX(),c.getY()) ;
 				
 				for ( cell neig : listNeig) 
-					 valNeig = valNeig + getValMorp(neig, m);
+					 valNeig = valNeig + getValMorp(neig, m, false);
 
 				diff = -  val + valNeig / listNeig.size()  ;
 			}	break;
@@ -117,7 +123,7 @@ public class layerRd extends framework  {
 				listNeig = getListNeighbors(typeNeighbourhood.vonNewmann, c.getX(),c.getY()) ;
 				
 				for ( cell neig : listNeig) 
-					 valNeig = valNeig + getValMorp(neig, m);
+					 valNeig = valNeig + getValMorp(neig, m, false);
 
 				diff = -  val + valNeig / listNeig.size()  ;
 			}	break;
@@ -128,10 +134,10 @@ public class layerRd extends framework  {
 				
 		//		System.out.println(listNeigS);
 				for ( cell neigS : listNeigS ) 
-					valNeigS = valNeigS + getValMorp(neigS, m);
+					valNeigS = valNeigS + getValMorp(neigS, m, false);
 
 				for ( cell neigC : listNeigC ) 
-					 valNeigC = valNeigC + getValMorp(neigC, m);
+					 valNeigC = valNeigC + getValMorp(neigC, m, false);
 			
 				diff = - val + 0.2 * valNeigS + 0.05 * valNeigC ; 				
 			}	break ;
@@ -142,7 +148,7 @@ public class layerRd extends framework  {
 	
 	private double getDiffusionCost ( typeDiffusion typeDiffusion, cell c , morphogen m ) {
 		double 	diff = 0 , 
-				val = getValMorp(c, m) ,
+				val = getValMorp(c, m, false) ,
 				valNeig = 0;
 		ArrayList<cell> listNeig = new ArrayList<cell>();
 		
@@ -155,7 +161,7 @@ public class layerRd extends framework  {
 				break;
 			}
 		for ( cell neig : listNeig) 
-			 valNeig = valNeig + getValMorp(neig, m);
+			 valNeig = valNeig + getValMorp(neig, m, false);
 
 		diff = listNeig.size() * val - valNeig ;
 
@@ -164,7 +170,7 @@ public class layerRd extends framework  {
 	
 	private double getDiffusionWeigth ( typeDiffusion typeDiffusion , cell c , morphogen m ) {
 		double diff = 0 , 
-		val = getValMorp(c, m) ,
+		val = getValMorp(c, m, false) ,
 		valNeigS = 0 ,	// sum of values of side neighbors 
 		valNeigC = 0;	// sum of values of corner neighbors
 		
@@ -172,10 +178,10 @@ public class layerRd extends framework  {
 		ArrayList<cell> listNeigC = new ArrayList<cell>(getListNeighbors(typeNeighbourhood.m_vn, c.getX(), c.getY()));
 		
 		for ( cell neigS : listNeigS ) 
-			valNeigS = valNeigS + getValMorp(neigS, m);
+			valNeigS = valNeigS + getValMorp(neigS, m, false);
 
 		for ( cell neigC : listNeigC ) 
-			 valNeigC = valNeigC + getValMorp(neigC, m);
+			 valNeigC = valNeigC + getValMorp(neigC, m, false);
 
 		diff = ( listNeigS.size() + listNeigC.size() ) * val - 0.8 * valNeigS - 0.2 * valNeigC ; 
 				 
@@ -197,11 +203,19 @@ public class layerRd extends framework  {
 	}
 
 	// get value of morphogen 
-	protected double getValMorp ( cell c, morphogen m) {		
+	protected double getValMorp ( cell c, morphogen m , boolean checkVal) {		
+		double val = 0 ;
 		if ( m.equals(morphogen.a))
-			return c.getVal1();
+			val = c.getVal1();
 		else
-			return c.getVal2();
+			val =  c.getVal2();
+	
+		if ( checkVal )
+			if (val>1 )
+				return 1;
+			else if (val < 0)
+				return 0 ;
+		return val;
 	}
 	
 	// get coefficient diffusion 

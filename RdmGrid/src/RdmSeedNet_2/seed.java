@@ -35,10 +35,16 @@ public class seed {
     public void setX(double X) {
         this.X = X;
     }
+    
     public void setY(double Y) {
         this.Y = Y;
     }
   
+    public void setCoords ( double X, double Y) {
+    	this.X = X ;
+    	this.Y = Y ;
+    }
+    
     public void setVecX ( double vecX ) {
     	this.vecX = vecX ;
     }
