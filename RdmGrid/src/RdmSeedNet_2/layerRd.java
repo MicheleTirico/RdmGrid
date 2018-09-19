@@ -14,11 +14,9 @@ public class layerRd extends framework  {
 	private  double f ,  k ,  Da,  Db ;
 	
 	public enum typeNeighbourhood { moore, vonNewmann , m_vn }
-	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
-
 	
-	private typeDiffusion typeDiffusion ; 
-
+	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
+	private typeDiffusion typeDiffusion ;
 	
 	public layerRd ( ) {
 		this(0,0,0,0);	
@@ -194,6 +192,10 @@ public class layerRd extends framework  {
 			return cells[cellX][cellY].getVal1();
 		else
 			return cells[cellX][cellY].getVal2();
+	}
+	
+	protected double[] getCenter () {		
+		return new double[] { numCellX * sizeX / 2 , numCellY * sizeY / 2} ;
 	}
 	
 // private methods ----------------------------------------------------------------------------------------------------------------------------------

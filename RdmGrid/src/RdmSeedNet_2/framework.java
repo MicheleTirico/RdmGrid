@@ -6,6 +6,12 @@ public abstract class framework  {
 
 	protected static layerSeed lSeed = new layerSeed();
 	protected static layerRd lRd = new layerRd();
+	protected static layerNet lNet = new layerNet() ;
+	
+	protected static int idNodeInt  ;
+	protected static int idEdgeInt ;
+	protected static String idNode ;
+	protected static String idEdge;
 	
 	protected static ArrayList<cell> listCell = new ArrayList<cell> ();
 	protected  enum morphogen { a , b }		

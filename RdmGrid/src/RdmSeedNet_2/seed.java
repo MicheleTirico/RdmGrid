@@ -1,18 +1,22 @@
 package RdmSeedNet_2;
 
+import org.graphstream.graph.Node;
+
 public class seed {
 	private double 	X, Y,
 					vecX, vecY;
 	
+	private Node n ;
 	public seed() {
-		this(0,0,0,0);
+		this(0,0,0,0, null);
 	}
 
-	public seed(double X, double Y, double vecX, double vecY) {
+	public seed(double X, double Y, double vecX, double vecY, Node n) {
 		this.X = X ;
 		this.Y = Y ;
 		this.vecX = vecX ;
 		this.vecY = vecY ;
+		this.n = n ;
 	}
 // GET METHODS -------------------------------------------------------------------------------------------------------------------------------------- 
     public double getX() {
@@ -30,6 +34,10 @@ public class seed {
     public double getVecY() {
     	return vecY;
     }
+    
+    public Node getNode() {
+    	return n;
+    }
    
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
     public void setX(double X) {
@@ -45,6 +53,10 @@ public class seed {
     	this.Y = Y ;
     }
     
+    public void setNode ( Node n ) {
+    	this.n = n ;
+    }
+    
     public void setVecX ( double vecX ) {
     	this.vecX = vecX ;
     }
@@ -56,5 +68,8 @@ public class seed {
     public void setVec ( double vecX , double vecY ) {
     	this.vecY = vecY ;
     	this.vecX = vecX ;   	
-    }  
+    }
+    
+    
+    
 }
