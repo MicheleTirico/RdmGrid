@@ -42,7 +42,9 @@ public class bucket {
         this.Y = Y;
     }
 
-    public void addNode ( Node n ) {
-    	
+    public void addNode ( Node n ) { 
+    	listNodes.add(n);
     }
+    
+   
 }

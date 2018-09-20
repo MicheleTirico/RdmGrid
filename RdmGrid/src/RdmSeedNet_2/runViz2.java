@@ -41,21 +41,21 @@ class LifePanel extends JPanel implements ActionListener {
 	
 	static double g = 1, alfa = 2 , Ds = 1	, r = 10;
 	
-	layerRd lRd = new layerRd(1.0, 1.0, 150, 150);
+	layerRd lRd = new layerRd(1.0, 1.0, 200, 200);
 	layerNet lNet = new layerNet(10) ;
 	layerSeed lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 	
 	  public LifePanel() {
-		  setPreferredSize(new Dimension(300, 300));
+		  setPreferredSize(new Dimension(200, 200));
 		  setBackground(Color.white);
 		
-		  lRd = new layerRd(1.0, 1.0, 300, 300);
+
 			
 		  lRd.initializeCostVal(1,0);	
-		  lRd.setValueOfCellAround(1, 1, 75, 75, 1);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		  lRd.setValueOfCellAround(1, 1, 100, 100, 1);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		  lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed);
 		
-		  lSeed.initializationSeedCircle(8, 5);
+	//	  lSeed.initializationSeedCircle(8, 5);
 		  
 		  Timer timer = new Timer(100, this);
 		  timer.start();	  
@@ -76,7 +76,8 @@ class LifePanel extends JPanel implements ActionListener {
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
+		if( t== 1000 )
+			return;
 		System.out.println(t);
 //		System.out.println(lRd.getValueMorphogen(150, 150, morphogen.b));
 		t++;

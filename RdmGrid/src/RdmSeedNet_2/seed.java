@@ -39,6 +39,10 @@ public class seed {
     	return n;
     }
    
+    public double getIntenVec ( ) {
+    	return Math.pow(Math.pow(vecX, 2) + Math.pow(vecY, 2) , 0.5 ) ;
+    }
+    
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
     public void setX(double X) {
         this.X = X;

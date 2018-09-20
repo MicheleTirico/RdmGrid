@@ -44,6 +44,11 @@ public class layerSeed extends framework {
 		}
 	}
 	
+	// remove seed 
+	public void removeSeed ( seed s ) {
+		seeds.remove(s) ;
+	}
+	
 	// create one seed
 	public void createSeed ( double X , double Y ) {
 		seeds.add( new seed(X, Y, 0, 0 , null) ) ;
@@ -85,6 +90,12 @@ public class layerSeed extends framework {
 				break ; 
 			}
 		}
+		
+
+		for ( Node n : graph.getEachNode()) {
+			bks.putNode(n);
+		}
+
 	}
 	
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------
