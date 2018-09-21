@@ -139,6 +139,7 @@ public class layerSeed extends framework {
 		vecX = checkValueVector(vecX, 1) ;
 		vecY = checkValueVector(vecY, 1) ;
 		
+		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
 	}
 	

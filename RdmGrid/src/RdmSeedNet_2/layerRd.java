@@ -12,7 +12,9 @@ public class layerRd extends framework  {
 	private int numCellX, numCellY;
 	private cell[][] cells ;
 	private  double f ,  k ,  Da,  Db ;
-	
+	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
+	private static RdmType type ;
+
 	public enum typeNeighbourhood { moore, vonNewmann , m_vn }
 	
 	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
@@ -49,6 +51,8 @@ public class layerRd extends framework  {
 			}	
 	}
 
+	
+	
 	
 // RULES --------------------------------------------------------------------------------------------------------------------------------------------
 	
@@ -293,4 +297,11 @@ public class layerRd extends framework  {
 		return  cells[X][Y]; 
 	}
 	
+	public double getFeed ( ) {
+		return f;
+	}
+	
+	public double getKill ( ) {
+		return k;
+	}
 }
