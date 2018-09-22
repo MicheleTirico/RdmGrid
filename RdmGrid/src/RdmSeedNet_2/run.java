@@ -11,7 +11,7 @@ import RdmSeedNet_2.layerRd.typeDiffusion;
 
 public class run extends framework {
 
-	static double  f =0.02, k = 0.06, Da = 0.2, Db = 0.1 ;	
+	static double  f , k  , Da = 0.2, Db = 0.1 ;	
 	static double g = 1, alfa = 2 , Ds = 1	, r = 5;
 	
 	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
@@ -26,23 +26,22 @@ public class run extends framework {
 		lRd.initializeCostVal(1,0);	
 		lRd.setValueOfCellAround(1, 1, 100, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
-		setRdType ( RdmType.chaos) ;
+		setRdType ( RdmType.f055_k062) ;
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 	
 		lNet = new layerNet(10) ;
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 		lSeed.initializationSeedCircle(20, 4);
 		
-		for ( int t = 0 ; t < 400 ; t++) {			
+		for ( int t = 0 ; t < 100 ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
 		//	lNet.updateLayerAndSeeds2();
-			lNet.updateLayerAndSeeds();
+			lNet.updateLayerAndSeeds7();
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
-		
 		
 		Graph gra = lNet.getGraph();
 			

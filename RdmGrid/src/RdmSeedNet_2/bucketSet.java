@@ -70,6 +70,19 @@ public class bucketSet extends framework {
 		return list;
 	}
 	
+	// get list nodes in radius
+		protected ArrayList<Node> getNodesInRadius ( double[] coords , double radius ) {		
+			double X = coords[0] , Y = coords[1] ;
+			ArrayList<Node> list = new ArrayList<Node>( );		
+			for ( double x = X - radius ; x <= X + radius ; x = x + sizeX ) 
+				for ( double y = Y - radius ; y <= Y + radius ; y = y + sizeY ) 	
+					for (Node no : getBucket(x, y).getistNodes()) 
+						if (!list.contains(no) && layerNet.getDistGeom(GraphPosLengthUtils.nodePosition(no), coords) < radius )
+							list.add(no);	
+		//	list.remove(n);
+			return list;
+		}
+	
 	// get buckets around point x Y in radius
 	private ArrayList<bucket> getBucketsInRadius (double X , double Y , double radius) {
 		ArrayList<bucket> list = new ArrayList<bucket>( );		
