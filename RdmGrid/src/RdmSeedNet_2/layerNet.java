@@ -1,37 +1,51 @@
 package RdmSeedNet_2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.graphstream.algorithm.Dijkstra;
+import org.graphstream.algorithm.Dijkstra.Element;
 import org.graphstream.graph.Edge;
 import org.graphstream.graph.EdgeRejectedException;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
+import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
-import scala.collection.script.Remove;
 
 public class layerNet extends framework {
 
-	private int numNodes , a ;
+	private boolean setLengthEdges ;
+	private int numNodes  ;
 	private double radius;
-	
+	private String id ; 
 	public enum typeSetupLayer { circle , test }
 	private static typeSetupLayer typeSetupLayer ;
 	
 	private Graph graph = new SingleGraph ( "net" );
 	public layerNet () {
-		this( 0 ) ;
+		this( null ) ;
 	}
 	
-	public layerNet( int a ) {
-		this.a = a ;
+	public layerNet( String id) {
+		this.id = id ;
+	}
+	
+	public void setLengthEdges ( String attr , boolean setLengthEdges) {
+		this.setLengthEdges = setLengthEdges ;
+		if ( setLengthEdges ) 
+			for ( Edge e : graph.getEachEdge() ) 
+				e.addAttribute("length", getLength(e));	
 	}
 	
 	public void setParametersCircle ( int numNodes, double radius ) {
@@ -456,53 +470,64 @@ public class layerNet extends framework {
 			lSeed.removeSeed(s);
 		
 	}
-	
 
 	public void updateLayerAndSeeds7 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
 	
-		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+	
+	for ( seed s : lSeed.getListSeeds()  ) {	//		System.out.println(s.getX() + " " + s.getY() + " " + s.getVecX() + " " + s.getVecY() + " " + s.getIntenVec() + " " +s.getNode());
+		// get old node
+		Node nodeS = s.getNode();
+		double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
+		double[] vec = lSeed.getVector(s);		
+		s.setVec(vec[0], vec[1]);
 		
-		for ( seed s : lSeed.getListSeeds()  ) {	//		System.out.println(s.getX() + " " + s.getY() + " " + s.getVecX() + " " + s.getVecY() + " " + s.getIntenVec() + " " +s.getNode());
-			// get old node
-			Node nodeS = s.getNode();
-			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
-			double[] vec = lSeed.getVector(s);		
-			s.setVec(vec[0], vec[1]);
-			
-			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
-			
-			// check edge X with graph
-			ArrayList<Node> listNearestNodes = bks.getNodesInRadius(nodeS, 5 ) ;
-			ArrayList<Edge> listEdges = getListEdgewhitNodeInList(listNearestNodes);
-			ArrayList<Edge> listXEdges = getListEdgeXInList(coordNodeS,coordNodeF, listEdges) ;//	System.out.println(listEdges);
-			
-			Edge e = null;	
-			if ( ! listXEdges.isEmpty() ) {
-				ArrayList <Node> nearestNodesDist = new ArrayList <Node> (getMapNodeDist(nodeS, bks.getNodesInRadius(nodeS, 1), 5).keySet() );			
-				for (Node nearest : nearestNodesDist ) {
-					ArrayList<Node> listNearestNodes2 = bks.getNodesInRadius(nodeS, 1 );
-					ArrayList<Edge> listEdges2 = getListEdgewhitNodeInList(listNearestNodes2);
-					ArrayList<Edge> listXEdges2 = getListEdgeXInList(nearest, nodeS, listEdges2) ;//	System.out.println(listEdges);
-					
-					if ( listXEdges2.isEmpty() ) {
-						try {
-							idEdge = Integer.toString(idEdgeInt +1 );
-							e = graph.addEdge(idEdge, nodeS, nearest) ;
-							listSeedsToRemove.add(s);
-							idEdgeInt++;
-							break ;
-						} catch (EdgeRejectedException exception) {
-						}
+		double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
+		
+		// check edge X with graph
+		ArrayList<Node> listNearestNodes = bks.getNodesInRadius(nodeS, 1 ) ;
+		ArrayList<Edge> listEdges = getListEdgewhitNodeInList(listNearestNodes);
+		ArrayList<Edge> listXEdges = getListEdgeXInList(coordNodeS,coordNodeF, listEdges) ;//	System.out.println(listEdges);
+		double testDist = 0 ;
+		Edge e = null;	
+		if ( ! listXEdges.isEmpty() ) {
+			ArrayList <Node> nearestNodesDist = new ArrayList <Node> (getMapNodeDist(nodeS, bks.getNodesInRadius(nodeS, 1), 5).keySet() );			
+			for (Node nearest : nearestNodesDist ) {
+				ArrayList<Node> listNearestNodes2 = bks.getNodesInRadius(nodeS, 1 );
+				ArrayList<Edge> listEdges2 = getListEdgewhitNodeInList(listNearestNodes);
+				ArrayList<Edge> listXEdges2 = getListEdgeXInList(nearest, nodeS, listEdges2) ;//	System.out.println(listEdges);
+				
+				if ( listXEdges2.isEmpty() ) {
+					try {
+						idEdge = Integer.toString(idEdgeInt +1 );
+						e = graph.addEdge(idEdge, nodeS, nearest) ;
+					//	listSeedsToRemove.add(s);
+						testDist = getDistGeom(nodeS, getNearestNode(nodeS, listNearestNodes));
+						idEdgeInt++;
+						break ;
+					} catch (EdgeRejectedException exception) {
 					}
 				}
 			}
-			
-			if ( e != null && getLength(e) < 0.1 ) {			
-				listSeedsToRemove.add(s);				
-				continue ;
+		}
+		
+		if ( e != null && getLength(e) >= testDist ) {			
+			listSeedsToRemove.add(s);				
+			continue ;
+		}
+		
+		// create new node
+		ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(nodeS));
+		boolean test = false ;
+		for ( Node n0 : listNeig) {
+			double dist_n0_nodeS = getDistGeom(nodeS, n0) ;
+			if ( dist_n0_nodeS < Math.min(getDistGeom(coordNodeF, coordNodeS) , .5 ) ) {
+				nodeS.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+				test = true ;
+				break ;
 			}
-			
-			// create new node
+		}
+//		if (test == false ) {
 			idNode = Integer.toString(idNodeInt)  ;
 			Node nodeF = graph.addNode( idNode ) ; 		
 			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
@@ -517,102 +542,371 @@ public class layerNet extends framework {
 			s.setNode(nodeF);
 			idEdgeInt++;
 			
-			double intenVec = s.getIntenVec() ;
-			ArrayList<Node> nearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, .15)) ;
-	//		System.out.println(nodeF + " " + nodeS + " " +  bks.getNodesInRadius(nodeF, .1));
-			nearestNodes.remove(nodeS);
-			nearestNodes.remove(nodeF);
-//			System.out.println(nodeF + " " + nodeS + " " +  nearestNodes);
-			ArrayList<Node> nodesToRemove = new ArrayList<Node>() ;
-			
-			for ( Node n :  nearestNodes ) {
+//		}
 		
-				ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(n)) ;
-				listNeig.remove(nodeS);
-				listNeig.remove(nodeF);
-				System.out.println(n + " " +nodeF+ " " + listNeig);
-				for ( Node neig : listNeig) {
-					if ( ! nearestNodes.contains(neig) ) {
-				
-					idEdge = Integer.toString( idEdgeInt+1 );
-				//	graph.addEdge(idEdge, neig , nodeF) ;
-				//	if ( ! nodesToRemove.contains(n))					nodesToRemove.add(n);
-					idEdgeInt++;
-					}
-					
-				}
-			}
-			
-			for( Node rem : nodesToRemove )
-				graph.removeNode(rem) ;
-			
-				
-					/*	
-						
-					
-					if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
-						nodesToRemove.add(nTest);
-						for ( Node neig : getListNeighbors(nTest) ) {
-							try {
-								idEdge = Integer.toString( idEdgeInt+1 );
-								graph.addEdge(idEdge, neig , nodeF) ;
-								idEdgeInt++;
-							} catch (EdgeRejectedException ex) {
-								// TODO: handle exception
-							}
-						}	
-					}
-					nTest = ed.getNode1();
-					if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
-						nodesToRemove.add(nTest);
-						for ( Node neig : getListNeighbors(nTest) ) {
-							try {
-								idEdge = Integer.toString( idEdgeInt+1 );
-								graph.addEdge(idEdge, neig , nodeF) ;
-								idEdgeInt++;
-							} catch (EdgeRejectedException ex) {
-								// TODO: handle exception
-							}
-						}	
-					}
-				}
-			}
-			
-			for( Node rem : nodesToRemove )
-				graph.removeNode(rem) ;
-			/*
-			ArrayList<Edge> listEdge = new ArrayList<Edge>() ;
-			for (Node n : nearestNodes) {
-				for ( Edge ed : n.getEdgeSet() )
-					if ( ! listEdge.contains(e)) {
-						listEdge.add(ed);
-						Node n0 = ed.getNode0(), n1 = ed.getNode1();
-						if ( n.equals(n0) && ! nodesToConnect.contains(n1))
-							nodesToConnect.add(n1);
-						if (n.equals(n1) && ! nodesToConnect.contains(n0))
-							nodesToConnect.add(n0);
-					}	
-//				graph.removeNode(n);
-			}
-			
-			for ( Node nod : nodesToConnect ) {
-				// create edge
-				if ( ! nod.equals(nodeF))
+		/*			if ( s.getIntenVec() < 0.1) {
+		ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(nodeS));
+		
+		listNeig.remove(nodeF);
+		for (Node n0 : listNeig) {
+			if ( getDistGeom(n0, nodeS) < 0.05) {
+				for ( Node n1 : new ArrayList<Node> (getListNeighbors(n0) ) ) {
+					if ( ! n1.equals(nodeS))
 					try {
 						idEdge = Integer.toString( idEdgeInt+1 );
-						graph.addEdge(idEdge, nod , nodeF) ;
-						idEdgeInt++;
-					} catch (EdgeRejectedException exc) {
-					
+						graph.addEdge(idEdge, n1 , nodeS) ;
+						graph.removeNode(n0);
+						idEdgeInt++ ;
+					}
+					catch (EdgeRejectedException | ArrayIndexOutOfBoundsException ex) {
+						// TODO: handle exception
+						
+					}
 				}
 			}
-						
-		*/
 		}
+		/*	for (Node no : getListNeighbors(n))
+				if (!no.equals(nodeF) ) {
+					try {
+						idEdge = Integer.toString( idEdgeInt+1 );
+						graph.addEdge(idEdge, no , nodeF) ;
+						graph.removeNode(n);
+						idEdgeInt++ ;
+					} catch (EdgeRejectedException ex) {
+						// TODO: handle exception
+					}
+					
+			*/		
+				
+	}
+	
+	for ( seed s :listSeedsToRemove)
+		lSeed.removeSeed(s);
+	
+}
+	
+		/*
+		ArrayList<Node> nearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, .15)) ;		//	System.out.println(nodeF + " " + nodeS + " " +  bks.getNodesInRadius(nodeF, .1));
+		nearestNodes.remove(nodeS);
+		nearestNodes.remove(nodeF);	//	System.out.println(nodeF + " " + nodeS + " " +  nearestNodes);
+		ArrayList<Node> nodesToRemove = new ArrayList<Node>() ;
+		
+		for ( Node n :  nearestNodes ) {
+	
+			ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(n)) ;
+			listNeig.remove(nodeS);
+			listNeig.remove(nodeF);
+			System.out.println(n + " " +nodeF+ " " + listNeig);
+			for ( Node neig : listNeig) {
+				if ( ! nearestNodes.contains(neig) ) {
+					try {
+							idEdge = Integer.toString( idEdgeInt+1 );
+							graph.addEdge(idEdge, neig , nodeF) ;
+							if ( ! nodesToRemove.contains(n) )					nodesToRemove.add(n);
+							idEdgeInt++;
+					} catch (EdgeRejectedException ex) {
+						// TODO: handle exception
+					}
+					}
+				
+			}
+		}
+		
+		for( Node rem : nodesToRemove )
+			graph.removeNode(rem) ;
+		*/
+			
+				/*	
+					
+				
+				if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
+					nodesToRemove.add(nTest);
+					for ( Node neig : getListNeighbors(nTest) ) {
+						try {
+							idEdge = Integer.toString( idEdgeInt+1 );
+							graph.addEdge(idEdge, neig , nodeF) ;
+							idEdgeInt++;
+						} catch (EdgeRejectedException ex) {
+							// TODO: handle exception
+						}
+					}	
+				}
+				nTest = ed.getNode1();
+				if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
+					nodesToRemove.add(nTest);
+					for ( Node neig : getListNeighbors(nTest) ) {
+						try {
+							idEdge = Integer.toString( idEdgeInt+1 );
+							graph.addEdge(idEdge, neig , nodeF) ;
+							idEdgeInt++;
+						} catch (EdgeRejectedException ex) {
+							// TODO: handle exception
+						}
+					}	
+				}
+			}
+		}
+		
+		for( Node rem : nodesToRemove )
+			graph.removeNode(rem) ;
+		/*
+		ArrayList<Edge> listEdge = new ArrayList<Edge>() ;
+		for (Node n : nearestNodes) {
+			for ( Edge ed : n.getEdgeSet() )
+				if ( ! listEdge.contains(e)) {
+					listEdge.add(ed);
+					Node n0 = ed.getNode0(), n1 = ed.getNode1();
+					if ( n.equals(n0) && ! nodesToConnect.contains(n1))
+						nodesToConnect.add(n1);
+					if (n.equals(n1) && ! nodesToConnect.contains(n0))
+						nodesToConnect.add(n0);
+				}	
+//			graph.removeNode(n);
+		}
+		
+		for ( Node nod : nodesToConnect ) {
+			// create edge
+			if ( ! nod.equals(nodeF))
+				try {
+					idEdge = Integer.toString( idEdgeInt+1 );
+					graph.addEdge(idEdge, nod , nodeF) ;
+					idEdgeInt++;
+				} catch (EdgeRejectedException exc) {
+				
+			}
+		}
+					
+	*/
+
+
+	
+    
+	public void updateLayerAndSeeds8 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
+	
+		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+		
+	
+		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
+	
+		for ( seed s : lSeed.getListSeeds()  ) {	//		System.out.println(s.getX() + " " + s.getY() + " " + s.getVecX() + " " + s.getVecY() + " " + s.getIntenVec() + " " +s.getNode());
+			// get old node
+			Node nodeS = s.getNode();
+			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
+			double[] vec = lSeed.getVector(s);		
+			s.setVec(vec[0], vec[1]);
+			
+			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
+			
+			// check edge X with graph
+			ArrayList<Node> listNearestNodes = bks.getNodesInRadius(nodeS, 5 ) ;
+			ArrayList<Edge> listEdges = getListEdgewhitNodeInList(listNearestNodes);
+			ArrayList<Edge> listXEdges = getListEdgeXInList(coordNodeS,coordNodeF, listEdges) ;//	System.out.println(listEdges);
+			double testDist = 0 ;
+			Edge e = null;	
+			if ( ! listXEdges.isEmpty() ) {
+				ArrayList <Node> nearestNodesDist = new ArrayList <Node> (getMapNodeDist(nodeS, bks.getNodesInRadius(nodeS, 1), 5).keySet() );			
+				for (Node nearest : nearestNodesDist ) {
+					ArrayList<Node> listNearestNodes2 = bks.getNodesInRadius(nodeS, 2 );
+					ArrayList<Edge> listEdges2 = getListEdgewhitNodeInList(listNearestNodes2);
+					ArrayList<Edge> listXEdges2 = getListEdgeXInList(nearest, nodeS, listEdges2) ;//	System.out.println(listEdges);
+					
+					if ( listXEdges2.isEmpty() ) {
+						try {							
+							dijkstra.setSource(nodeS);
+							dijkstra.init(graph);
+					 		dijkstra.compute();
+//							System.out.println(nodeS + " " + nearest + " " + dijkstra.getPathLength(nearest));
+//							System.out.println(getDistGeom(nodeS, nearest));
+							
+							double dj = dijkstra.getPathLength(nearest);
+					//		if ( getDistGeom(nodeS, nearest) > dj ) {
+								idEdge = Integer.toString(idEdgeInt +1 );
+								e = graph.addEdge(idEdge, nodeS, nearest) ;
+								e.addAttribute("length", getLength(e));
+								listSeedsToRemove.add(s);	
+								idEdgeInt++;
+								break ;
+						//	} else {	
+								/*
+								for ( Node n : dijkstra.getPath(nearest).getEachNode() ) {
+									for ( Node neig: getListNeighbors(n)) {
+										idEdge = Integer.toString(idEdgeInt +1 );
+										e = graph.addEdge(idEdge, nodeS, neig) ;
+										e.addAttribute("length", getLength(e));
+										graph.removeNode(n) ;
+										listSeedsToRemove.add(s);	
+										
+										idNodeInt++ ;
+										
+									}
+				
+								}
+
+								*/	
+							
+						} catch (EdgeRejectedException exception) {
+						}
+					}
+				}
+			}
+			
+			if ( e != null && getLength(e) >= 0.0 ) {			
+		//		listSeedsToRemove.add(s);				
+		//		continue ;
+			}
+			
+			// create new node
+			ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(nodeS));
+			boolean test = false ;
+			for ( Node n0 : listNeig) {
+				double dist_n0_nodeS = getDistGeom(nodeS, n0) ;
+				if ( dist_n0_nodeS < Math.min(getDistGeom(coordNodeF, coordNodeS) , .1 ) ) {
+					nodeS.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+					test = true ;
+					break ;
+				}
+			}
+			if (test == false ) {
+				idNode = Integer.toString(idNodeInt)  ;
+				Node nodeF = graph.addNode( idNode ) ; 		
+				nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+				s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+				s.setNode(nodeF);
+				bks.putNode(nodeF);
+				idNodeInt++;
+					
+				// create edge
+				idEdge = Integer.toString( idEdgeInt+1 );
+				e = graph.addEdge(idEdge, nodeS , nodeF) ;
+				e.addAttribute("length", getLength(e));
+				s.setNode(nodeF);
+				idEdgeInt++;
+				
+ 			}
+		}
+		
 		for ( seed s :listSeedsToRemove)
 			lSeed.removeSeed(s);
 		
 	}
+	
+	public void updateLayerAndSeeds9 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
+	
+	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+	Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
+	
+	for ( seed s : lSeed.getListSeeds()  ) {	//		System.out.println(s.getX() + " " + s.getY() + " " + s.getVecX() + " " + s.getVecY() + " " + s.getIntenVec() + " " +s.getNode());
+		// get old node
+		Node nodeS = s.getNode();
+		double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
+		
+		// compute future node
+		double[] vec = lSeed.getVector(s);		
+		double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
+		
+		// check edge X with graph
+		ArrayList<Node> listNearestNodes = bks.getNodesInRadius(nodeS, 1 );
+		ArrayList<Edge> listEdges = getListEdgewhitNodeInList(listNearestNodes);
+		ArrayList<Edge> listXEdges = getListEdgeXInList(coordNodeS,coordNodeF, listEdges) ;//	System.out.println(listEdges);
+		System.out.println(listXEdges);
+		if ( ! listXEdges.isEmpty()) {
+			Node nearest = getNearestNode(nodeS, listNearestNodes) ;
+		//	s.setNode(nodeS);
+			
+			try {
+				dijkstra.setSource(nodeS);
+				dijkstra.init(graph);
+				dijkstra.compute();
+			
+			//	double dj = dijkstra.getPathLength(nearest);			
+				Path p = dijkstra.getPath(nearest) ;
+				if ( p.size() >= 3 && p.size() <= 6 ) {	
+					System.out.println(nodeS + " " + nearest + " " + p + " " + p.size());
+					ArrayList<Node> listNodes = new ArrayList<Node>(p.getNodeSet());
+					listNodes.removeAll(Arrays.asList(nodeS, nearest));
+					for ( Node n :listNodes ) 
+						graph.removeNode(n);	
+					continue ;
+				}
+				
+				idEdge = Integer.toString(idEdgeInt +1 );
+				Edge e = graph.addEdge(idEdge, nodeS, nearest) ;				
+				e.setAttribute("length", getLength(e));
+				
+				
+				if( ! listSeedsToRemove.contains(s)    ) 
+					listSeedsToRemove.add(s);				
+				
+				idEdgeInt++;
+				continue;
+				
+			 } catch (EdgeRejectedException e) { //			 e.printStackTrace();
+				
+			}
+		} 
+		
+		Node nodeF;
+	
+		if ( getDistGeom(coordNodeS, coordNodeF) < 0.05 ) {
+		//	System.out.println(s.getX() + " " + vec[0]);
+		//	System.out.println("min" + GraphPosLengthUtils.nodePosition(nodeS)[0]);
+			nodeS.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);	
+			s.setVec(vec[0], vec[1]);
+		//	System.out.println("min" + GraphPosLengthUtils.nodePosition(nodeS)[0]);
+		//	s.setNode(nodeS);
+		// s.setCoords(s.getX()+ vec[0], s.getY() + vec[1] );
+		}
+		else {
+			System.out.println("max");
+			idNode = Integer.toString(idNodeInt)  ;
+			nodeF = graph.addNode( idNode ) ; 		
+			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+			s.setNode(nodeF);
+			bks.putNode(nodeF);
+			idNodeInt++;
+				
+			// create edge
+			idEdge = Integer.toString( idEdgeInt+1 );
+			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
+			e.addAttribute("length", getLength(e));
+			s.setNode(nodeF);
+			idEdgeInt++;
+		}		
+			/*
+		// get radius
+		double intenVec = s.getIntenVec() ;	
+		listNearestNodes = bks.getNodesInRadius(nodeF, intenVec);	//		System.out.println(intenVec);
+			
+		// check nodes in radius
+		if ( ! listNearestNodes.isEmpty()) {
+			for ( Node nearest : listNearestNodes) {
+				try {		//	System.out.println(nearest +" " + nodeF +  " "+ listNearestNodes);
+					
+					double[] coordNodeNearest = GraphPosLengthUtils.nodePosition(nearest) ;
+					listEdges = getListEdgeNeighbor( nodeF , intenVec);
+					listXEdges = getListEdgeXInList(coordNodeF , coordNodeNearest, listEdges) ;//	System.out.println(listEdges);
+				
+					if ( ! listXEdges.isEmpty()) 
+						continue;
+					
+					idEdge = Integer.toString(idEdgeInt + 1 );
+					Edge e = graph.addEdge(idEdge, nodeF, nearest) ;
+					if( !  listSeedsToRemove.contains(s) && getLength(e) <= 0.001 )
+						listSeedsToRemove.add(s);
+				//	listSeeds = lSeed.getListSeeds()  ; 
+					idEdgeInt++;
+				} catch (EdgeRejectedException e) { 	//	e.printStackTrace();
+					continue ;
+				}
+			}
+		}			
+		 */
+	}
+	
+	for ( seed s : listSeedsToRemove) 
+		lSeed.removeSeed(s);
+}
 	
 	public void updateLayerAndSeeds () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
 		
@@ -671,12 +965,12 @@ public class layerNet extends framework {
 			s.setNode(nodeF);
 			idEdgeInt++;
 	
-			// get radius
-			double intenVec = s.getIntenVec() ;
-//			if (intenVec < 0.01)		continue ;
 			
+			/*	
+			// get radius
+			double intenVec = s.getIntenVec() ;	
 			listNearestNodes = bks.getNodesInRadius(nodeF, intenVec);	//		System.out.println(intenVec);
-			/*		
+				
 			// check nodes in radius
 			if ( ! listNearestNodes.isEmpty()) {
 				for ( Node nearest : listNearestNodes) {
@@ -792,6 +1086,8 @@ public class layerNet extends framework {
 	
 	// get nearest node
 	private Node getNearestNode ( Node node , ArrayList<Node> listNodes ) {
+		
+		listNodes.remove(node);
 		
 		Node nearest = null;
 		double dist = 10 ;	

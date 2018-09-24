@@ -2,8 +2,12 @@ package RdmSeedNet_2;
 
 import java.util.ArrayList;
 
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import RdmGsaNetAlgo.graphGenerator;
 import RdmGsaNetViz.handleVizStype;
 import RdmGsaNetViz.handleVizStype.stylesheet;
 import RdmSeedNet_2.layerNet.typeSetupLayer;
@@ -18,7 +22,7 @@ public class run extends framework {
 	private static RdmType type ;
 	
 	public static void main(String[] args) {
-
+		
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
@@ -26,33 +30,41 @@ public class run extends framework {
 		lRd.initializeCostVal(1,0);	
 		lRd.setValueOfCellAround(1, 1, 100, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
-		setRdType ( RdmType.f055_k062) ;
+		setRdType ( RdmType.movingSpots ) ;
+	//	System.out.println(f + " " + k);
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 	
-		lNet = new layerNet(10) ;
+		lNet = new layerNet("net") ;
+		Graph gra = lNet.getGraph();
+		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 		lSeed.initializationSeedCircle(20, 4);
+		lNet.setLengthEdges("length" , true );
 		
-		for ( int t = 0 ; t < 100 ; t++) {			
+		for ( int t = 0 ; t < 1000  ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
 		//	lNet.updateLayerAndSeeds2();
-			lNet.updateLayerAndSeeds7();
+			lNet.updateLayerAndSeeds9();
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
 		
-		Graph gra = lNet.getGraph();
-			
+		for ( seed s : lSeed.getListSeeds()) {
+			s.getNode().setAttribute("seed", 1);
+			System.out.println(s.getIntenVec() + " " + s.getVecX() +" " + s.getVecY());
+		}
+		
+
 		// setup viz netGraph
-		handleVizStype netViz = new handleVizStype( gra ,stylesheet.manual , "merge", 1) ;
+		handleVizStype netViz = new handleVizStype( gra ,stylesheet.manual , "seed", 1) ;
 		netViz.setupIdViz(false , gra, 20 , "black");
 		netViz.setupDefaultParam (gra, "black", "black", 5 , 0.5 );
 		netViz.setupVizBooleanAtr(true, gra, "black", "red" , false , false ) ;
 		netViz.setupFixScaleManual( false  , gra, 200 , 0);
 	
-		gra.display(false) ;
+		gra.display(false);
 		
 		
 	}
