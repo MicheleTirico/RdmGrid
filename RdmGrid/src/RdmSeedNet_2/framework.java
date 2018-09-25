@@ -2,6 +2,10 @@ package RdmSeedNet_2;
 
 import java.util.ArrayList;
 
+import javax.swing.JPanel;
+
+import RdmSeedNet_2.run.RdmType;
+
 public abstract class framework  {
 
 	protected static layerSeed lSeed = new layerSeed();
@@ -17,7 +21,10 @@ public abstract class framework  {
 	protected static ArrayList<cell> listCell = new ArrayList<cell> ();
 	protected static ArrayList<bucket> listBucket = new ArrayList<bucket>();
 	
-	protected  enum morphogen { a , b }		
+	protected enum morphogen { a , b }		
+	protected enum typeVectorField { gravity , slope } 
+	
+	
 	
 	
 	

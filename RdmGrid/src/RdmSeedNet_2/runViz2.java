@@ -42,7 +42,7 @@ class LifePanel extends JPanel implements ActionListener {
 	static double g = 1, alfa = 2 , Ds = 1	, r = 10;
 	
 	layerRd lRd = new layerRd(1.0, 1.0, 200, 200);
-	layerNet lNet = new layerNet(10) ;
+	layerNet lNet = new layerNet() ;
 	layerSeed lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 	
 	  public LifePanel() {

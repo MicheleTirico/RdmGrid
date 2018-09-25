@@ -1,12 +1,17 @@
 package RdmSeedNet_2;
 
+import java.awt.Color;
+import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import javax.swing.JApplet;
+
 import RdmSeedNet_2.framework.morphogen;
 
-public class layerRd extends framework  {
+public class layerRd extends framework   {
 
 	private double sizeX, sizeY;
 	private int numCellX, numCellY;
@@ -49,14 +54,13 @@ public class layerRd extends framework  {
 				cells[x][y] = c ;
 				putCellInList(c);			
 			}	
-	}
+	}	
+	
+// VIZ METHODS --------------------------------------------------------------------------------------------------------------------------------------
 
 	
-	
-	
-// RULES --------------------------------------------------------------------------------------------------------------------------------------------
-	
-	// Gray Scott classic model -------------------------------------------------------------------------------------------------------------------------
+// RULES --------------------------------------------------------------------------------------------------------------------------------------------	
+	// Gray Scott classic model 
 		
 	// set initial parameters of gray scott model
 	public void setGsParameters ( double f , double k , double Da, double Db, typeDiffusion mooreweigthed) {
@@ -146,8 +150,7 @@ public class layerRd extends framework  {
 		}
 		return diff ; 
 	}
-	
-	
+		
 	private double getDiffusionCost ( typeDiffusion typeDiffusion, cell c , morphogen m ) {
 		double 	diff = 0 , 
 				val = getValMorp(c, m, false) ,

@@ -51,11 +51,11 @@ class LifePanel extends JPanel implements ActionListener{
 		lRd.setValueOfCellAround(1, 1, 75, 75, 1);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed);
 		
-		lNet = new layerNet(10) ;
+		lNet = new layerNet() ;
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
-		lSeed.initializationSeedCircle(20, 2);
+	//	lSeed.initializationSeedCircle(20, 2);
 			
-		Timer timer = new Timer(1000, this);
+		Timer timer = new Timer(10, this);
 		timer.start();	  
 	  }
 	  

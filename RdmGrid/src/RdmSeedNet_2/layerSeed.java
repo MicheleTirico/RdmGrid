@@ -1,6 +1,8 @@
 package RdmSeedNet_2;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
@@ -90,16 +92,13 @@ public class layerSeed extends framework {
 				break ; 
 			}
 		}
-		
-
 		for ( Node n : graph.getEachNode()) {
 			bks.putNode(n);
 		}
 
 	}
 	
-// UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------
-	
+// UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------	
 	public void updateLayer() {
 		for (seed s : seeds) {
 			double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0;
@@ -108,8 +107,8 @@ public class layerSeed extends framework {
 					try {
 						cell c = lRd.getCell(x,y);
 						double val = lRd.getValMorp(c, m, true) ;
-						vecX = vecX + ceckPositionVector(c.getX(),s.getX(),val) ;
-						vecY = vecY + ceckPositionVector(c.getY(),s.getY(),val) ;
+						vecX = vecX + ceckPositionVectorGravity(c.getX(),s.getX(),val) ;
+						vecY = vecY + ceckPositionVectorGravity(c.getY(),s.getY(),val) ;
 					} catch (ArrayIndexOutOfBoundsException e) {
 						continue ;
 					}
@@ -123,21 +122,72 @@ public class layerSeed extends framework {
 		}
 	}
 
-	protected double[] getVector (seed s) {
-		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0;
+	protected double[] getVector (seed s , typeVectorField typeVectorField ) {
+		
+		double[] vector = new double[2];
+		switch ( typeVectorField) {
+			case gravity:
+				vector = getVectorGravity(s);
+				break;
+			case slope :
+				vector = getVectorSlope(s);
+				break;
+		}
+		return vector ;
+	}
+	
+	// get vector slope
+	private double[] getVectorSlope ( seed s ) {
+		double sX = s.getX() , sY = s.getY() ;
+
+		cell 	c00 = lRd.getCell( (int) Math.floor(sX),(int) Math.floor(sY)), 
+				c11 = lRd.getCell( (int) Math.ceil(sX),(int) Math.ceil(sY)),
+				c01 = lRd.getCell( (int) Math.floor(sX),(int) Math.ceil(sY)),
+				c10 = lRd.getCell( (int) Math.ceil(sX),(int) Math.floor(sY));
+		
+		double 	val00 = lRd.getValMorp(c00, m, false) , 
+				val11 = lRd.getValMorp(c11, m, false) ,
+				val01 = lRd.getValMorp(c01, m, false) ,
+				val10 = lRd.getValMorp(c10, m, false) ,
+				distXfloor = Math.pow(sY - Math.floor(sY), 1), 
+				distXceil = Math.pow(sY - Math.ceil(sY), 1), 
+				
+				distYfloor = Math.pow(sX - Math.floor(sX), 1), 
+				distYceil = Math.pow(sX - Math.ceil(sX), 1); 
+				
+		//		System.out.println(distXceil + " " + distXfloor);
+				double 	vecX = (-val00 + val10) - (val10 - val11) ,
+						vecY = (-val00 + val01) + (val01 - val11) ;
+					
+		if ( Double.isNaN(vecX))			vecX = 0 ;
+		if ( Double.isNaN(vecY))			vecY = 0 ;
+		
+		vecX = checkValueVector(vecX, 1.0) ;
+		vecY = checkValueVector(vecY, 1.0) ;
+		
+//		System.out.println(vecX);		
+//		System.out.println(vecY);	
+
+		s.setVec(-vecX, -vecY);
+		return new double[] {-vecX ,-vecY} ;
+	}
+	
+	//get vector gravity
+	private double[] getVectorGravity ( seed s ) {
+		double vecX = 0 , vecY = 0;
 		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
 			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {
 				try {
 					cell c = lRd.getCell(x,y);
 					double val = lRd.getValMorp(c, m, true) ;
-					vecX = vecX + ceckPositionVector(c.getX(),s.getX(),val) ;
-					vecY = vecY + ceckPositionVector(c.getY(),s.getY(),val) ;
+					vecX = vecX + ceckPositionVectorGravity(c.getX(),s.getX(),val) ;
+					vecY = vecY + ceckPositionVectorGravity(c.getY(),s.getY(),val) ;
 				} catch (ArrayIndexOutOfBoundsException e) {
 					continue ;
 				}
 			}
-		vecX = checkValueVector(vecX, 1) ;
-		vecY = checkValueVector(vecY, 1) ;
+		vecX = checkValueVector(vecX, 1.0) ;
+		vecY = checkValueVector(vecY, 1.0) ;
 		
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
@@ -157,8 +207,18 @@ public class layerSeed extends framework {
 			return vec;
 	}
 	
+	// not used
+	private double ceckPositionVector (double vector ,double posCell , double posSeed, double val) {
+		vector = vector / Math.pow(posCell - posSeed, alfa) ;	
+		if ( posCell == posSeed)
+			return 0 ;
+		if ( posCell < posSeed)
+			return -vector ;
+		else return vector ;
+	}
+	
 	// check distance between seed and cell
-	private double ceckPositionVector (double posCell , double posSeed, double val) {
+	private double ceckPositionVectorGravity (double posCell , double posSeed, double val) {
 		double v = Ds * g * val / Math.pow(posCell - posSeed, alfa);
 		if ( posCell == posSeed)
 			return 0 ;
@@ -166,6 +226,7 @@ public class layerSeed extends framework {
 			return -v ;
 		else return v ;
 	}
+	
 
 	// old method
 	public void updateLayer3() {
@@ -175,13 +236,13 @@ public class layerSeed extends framework {
 			for ( cell c : listCell) {
 				double 	val = lRd.getValMorp(c, m, false) ;
 				if ( val > 1 )				val = 1 ; 
-				vecX = vecX + ceckPositionVector(c.getX(),s.getX(),val) ;
-				vecY = vecY + ceckPositionVector(c.getY(),s.getY(),val) ;
+				vecX = vecX + ceckPositionVectorGravity(c.getX(),s.getX(),val) ;
+				vecY = vecY + ceckPositionVectorGravity(c.getY(),s.getY(),val) ;
 			}
 			if (vecX > 1 )				vecX = 1 ;		
 			if (vecY > 1 )				vecY = 1 ;		
-			if (vecX < - 1 )				vecX = - 1 ;		
-			if (vecY < - 1 )				vecY = - 1 ;
+			if (vecX < - 1 )			vecX = - 1 ;		
+			if (vecY < - 1 )			vecY = - 1 ;
 			
 			s.setVec(vecX, vecY);
 			s.setX( sX + vecX );
@@ -228,14 +289,38 @@ public class layerSeed extends framework {
 	private double getSignVec ( double pos1 , double pos2 ) {	
 		if (pos1 == pos2)
 			return 0 ; 
-		else if ( pos1 - pos2 >= 0 )
-			return 1;
+		else if ( pos1 < pos2   )
+			return -1;
 		else 
-			return -1 ;
+			return 1 ;
 	}
 	
 // GET METHODS --------------------------------------------------------------------------------------------------------------------------------------
 	public ArrayList<seed> getListSeeds () {
 		return seeds;		
+	}
+	
+	public ArrayList<Node> getListNodeWithSeed ( ) {
+		ArrayList<Node> list = new ArrayList<Node> ();
+		for ( seed s : seeds) {
+			Node n = s.getNode();
+			if ( ! list.contains(n))
+				list.add(s.getNode());
+		}
+		return list;
+	}
+	
+	public Map<cell ,Double> getValAroundSeed ( seed s , morphogen m , double r ) {
+		Map<cell ,Double> map = new HashMap<cell ,Double> ();
+		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
+			for ( int y = (int) Math.floor(s.getY() - r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {
+					cell c = lRd.getCell(x,y);
+					double val = lRd.getValMorp(c, m, true) ;
+					map.put(c, val);
+				}
+	
+		return map;
+		
+		
 	}
 }

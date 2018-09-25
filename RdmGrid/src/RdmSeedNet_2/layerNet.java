@@ -101,7 +101,7 @@ public class layerNet extends framework {
 			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
 						
 			// get cooord of future node
-			double[] vec = lSeed.getVector(s);	
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);	
 			double intenVec = s.getIntenVec();
 			double[] coordNodeF = new double[] {s.getX()+ vec[0], s.getY() + vec[1]};
 			
@@ -196,7 +196,7 @@ public class layerNet extends framework {
 			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
 			
 			// compute future node
-			double[] vec = lSeed.getVector(s);		//	System.out.println(vec[0] + " " + vec[1] );
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);		//	System.out.println(vec[0] + " " + vec[1] );
 			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
 			s.setVec(vec[0], vec[1]);	
 			
@@ -293,7 +293,7 @@ public class layerNet extends framework {
 		// get old node
 		Node nodeS = s.getNode();
 		double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
-		double[] vec = lSeed.getVector(s);		
+		double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 		s.setVec(vec[0], vec[1]);
 		
 		double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
@@ -394,7 +394,6 @@ public class layerNet extends framework {
 	
 }
 
-
 	public void updateLayerAndSeeds5 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
 	
 		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
@@ -403,7 +402,7 @@ public class layerNet extends framework {
 			// get old node
 			Node nodeS = s.getNode();
 			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
-			double[] vec = lSeed.getVector(s);		
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 			s.setVec(vec[0], vec[1]);
 			
 			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
@@ -479,7 +478,7 @@ public class layerNet extends framework {
 		// get old node
 		Node nodeS = s.getNode();
 		double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
-		double[] vec = lSeed.getVector(s);		
+		double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 		s.setVec(vec[0], vec[1]);
 		
 		double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
@@ -584,102 +583,6 @@ public class layerNet extends framework {
 		lSeed.removeSeed(s);
 	
 }
-	
-		/*
-		ArrayList<Node> nearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, .15)) ;		//	System.out.println(nodeF + " " + nodeS + " " +  bks.getNodesInRadius(nodeF, .1));
-		nearestNodes.remove(nodeS);
-		nearestNodes.remove(nodeF);	//	System.out.println(nodeF + " " + nodeS + " " +  nearestNodes);
-		ArrayList<Node> nodesToRemove = new ArrayList<Node>() ;
-		
-		for ( Node n :  nearestNodes ) {
-	
-			ArrayList<Node> listNeig = new ArrayList<Node>(getListNeighbors(n)) ;
-			listNeig.remove(nodeS);
-			listNeig.remove(nodeF);
-			System.out.println(n + " " +nodeF+ " " + listNeig);
-			for ( Node neig : listNeig) {
-				if ( ! nearestNodes.contains(neig) ) {
-					try {
-							idEdge = Integer.toString( idEdgeInt+1 );
-							graph.addEdge(idEdge, neig , nodeF) ;
-							if ( ! nodesToRemove.contains(n) )					nodesToRemove.add(n);
-							idEdgeInt++;
-					} catch (EdgeRejectedException ex) {
-						// TODO: handle exception
-					}
-					}
-				
-			}
-		}
-		
-		for( Node rem : nodesToRemove )
-			graph.removeNode(rem) ;
-		*/
-			
-				/*	
-					
-				
-				if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
-					nodesToRemove.add(nTest);
-					for ( Node neig : getListNeighbors(nTest) ) {
-						try {
-							idEdge = Integer.toString( idEdgeInt+1 );
-							graph.addEdge(idEdge, neig , nodeF) ;
-							idEdgeInt++;
-						} catch (EdgeRejectedException ex) {
-							// TODO: handle exception
-						}
-					}	
-				}
-				nTest = ed.getNode1();
-				if ( ! nTest.equals(nodeS) && nearestNodes.contains(nTest)) {
-					nodesToRemove.add(nTest);
-					for ( Node neig : getListNeighbors(nTest) ) {
-						try {
-							idEdge = Integer.toString( idEdgeInt+1 );
-							graph.addEdge(idEdge, neig , nodeF) ;
-							idEdgeInt++;
-						} catch (EdgeRejectedException ex) {
-							// TODO: handle exception
-						}
-					}	
-				}
-			}
-		}
-		
-		for( Node rem : nodesToRemove )
-			graph.removeNode(rem) ;
-		/*
-		ArrayList<Edge> listEdge = new ArrayList<Edge>() ;
-		for (Node n : nearestNodes) {
-			for ( Edge ed : n.getEdgeSet() )
-				if ( ! listEdge.contains(e)) {
-					listEdge.add(ed);
-					Node n0 = ed.getNode0(), n1 = ed.getNode1();
-					if ( n.equals(n0) && ! nodesToConnect.contains(n1))
-						nodesToConnect.add(n1);
-					if (n.equals(n1) && ! nodesToConnect.contains(n0))
-						nodesToConnect.add(n0);
-				}	
-//			graph.removeNode(n);
-		}
-		
-		for ( Node nod : nodesToConnect ) {
-			// create edge
-			if ( ! nod.equals(nodeF))
-				try {
-					idEdge = Integer.toString( idEdgeInt+1 );
-					graph.addEdge(idEdge, nod , nodeF) ;
-					idEdgeInt++;
-				} catch (EdgeRejectedException exc) {
-				
-			}
-		}
-					
-	*/
-
-
-	
     
 	public void updateLayerAndSeeds8 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
 	
@@ -692,7 +595,7 @@ public class layerNet extends framework {
 			// get old node
 			Node nodeS = s.getNode();
 			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
-			double[] vec = lSeed.getVector(s);		
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 			s.setVec(vec[0], vec[1]);
 			
 			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
@@ -790,6 +693,116 @@ public class layerNet extends framework {
 		
 	}
 	
+	public void updateLayerAndSeeds10 (typeVectorField typeVectorField) {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
+		
+		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
+		ArrayList <Node> listNodeWithSeed = new ArrayList<Node>(lSeed.getListNodeWithSeed());
+		
+		for ( seed s : lSeed.getListSeeds()  ) {	//		System.out.println(s.getX() + " " + s.getY() + " " + s.getVecX() + " " + s.getVecY() + " " + s.getIntenVec() + " " +s.getNode());
+			// get old node
+			Node nodeS = s.getNode();
+			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
+			
+			// compute future node
+			double[] vec = lSeed.getVector(s, typeVectorField);		
+			double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
+			s.setVec(vec[0], vec[1]);
+			
+			// check edge X with graph
+			ArrayList<Node> listNearestNodes = bks.getNodesInRadius(nodeS, 1 );
+			ArrayList<Edge> listEdges = getListEdgewhitNodeInList(listNearestNodes);
+			ArrayList<Edge> listXEdges = getListEdgeXInList(coordNodeS,coordNodeF, listEdges) ;//	System.out.println(listEdges);
+			
+			Edge e = null ;
+			if ( listXEdges.isEmpty()) {
+				Node nodeF;	
+		//		System.out.println("max");
+				idNode = Integer.toString(idNodeInt)  ;
+				nodeF = graph.addNode( idNode ) ; 		
+				nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+				s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+				s.setNode(nodeF);
+				bks.putNode(nodeF);
+				idNodeInt++;
+					
+				// create edge
+				idEdge = Integer.toString( idEdgeInt+1 );
+				e = graph.addEdge(idEdge, nodeS , nodeF) ;
+				e.addAttribute("length", getLength(e));
+				s.setNode(nodeF);
+				idEdgeInt++;
+			}
+			else {
+		//		System.out.println(listXEdges);
+				Node nearest = getNearestNode(nodeS, listNearestNodes) ;
+		//		ArrayList <Node> nearestNodesDist = new ArrayList <Node> (getMapNodeDist(nodeS, listNearestNodes, 5 ).keySet() );
+		//		for ( Node nearest : nearestNodesDist)   {
+					
+					
+					
+					try {	
+						idEdge = Integer.toString(idEdgeInt +1 );
+						e = graph.addEdge(idEdge, nodeS, nearest) ;				
+						e.setAttribute("length", getLength(e));	
+						
+						if( ! listSeedsToRemove.contains(s) 
+								&& !listNodeWithSeed.contains(nearest)  
+								) 
+							listSeedsToRemove.add(s);				
+						
+						idEdgeInt++;
+						break ;
+	
+					
+					} catch (EdgeRejectedException ex) { //			 e.printStackTrace();
+						s.setNode(nodeS);
+						s.setVec(vec[0], vec[1]);
+			//		}
+				}
+			} 
+			if ( e == null ) {
+
+				
+			}
+			
+		
+				
+				/*
+			// get radius
+			double intenVec = s.getIntenVec() ;	
+			listNearestNodes = bks.getNodesInRadius(nodeF, intenVec);	//		System.out.println(intenVec);
+				
+			// check nodes in radius
+			if ( ! listNearestNodes.isEmpty()) {
+				for ( Node nearest : listNearestNodes) {
+					try {		//	System.out.println(nearest +" " + nodeF +  " "+ listNearestNodes);
+						
+						double[] coordNodeNearest = GraphPosLengthUtils.nodePosition(nearest) ;
+						listEdges = getListEdgeNeighbor( nodeF , intenVec);
+						listXEdges = getListEdgeXInList(coordNodeF , coordNodeNearest, listEdges) ;//	System.out.println(listEdges);
+					
+						if ( ! listXEdges.isEmpty()) 
+							continue;
+						
+						idEdge = Integer.toString(idEdgeInt + 1 );
+						Edge e = graph.addEdge(idEdge, nodeF, nearest) ;
+						if( !  listSeedsToRemove.contains(s) && getLength(e) <= 0.001 )
+							listSeedsToRemove.add(s);
+					//	listSeeds = lSeed.getListSeeds()  ; 
+						idEdgeInt++;
+					} catch (EdgeRejectedException e) { 	//	e.printStackTrace();
+						continue ;
+					}
+				}
+			}			
+			 */
+		}
+		
+		for ( seed s : listSeedsToRemove) 
+			lSeed.removeSeed(s);
+	}
+	
 	public void updateLayerAndSeeds9 () {	System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());
 	
 	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
@@ -801,7 +814,7 @@ public class layerNet extends framework {
 		double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
 		
 		// compute future node
-		double[] vec = lSeed.getVector(s);		
+		double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 		double[] coordNodeF = new double[]{s.getX()+ vec[0], s.getY() + vec[1] };
 		
 		// check edge X with graph
@@ -834,14 +847,13 @@ public class layerNet extends framework {
 				e.setAttribute("length", getLength(e));
 				
 				
-				if( ! listSeedsToRemove.contains(s)    ) 
+				if( ! listSeedsToRemove.contains(s) ) 
 					listSeedsToRemove.add(s);				
 				
 				idEdgeInt++;
 				continue;
 				
 			 } catch (EdgeRejectedException e) { //			 e.printStackTrace();
-				
 			}
 		} 
 		
@@ -918,7 +930,7 @@ public class layerNet extends framework {
 			double[] coordNodeS = GraphPosLengthUtils.nodePosition(nodeS) ;
 			
 			// compute future node
-			double[] vec = lSeed.getVector(s);		
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);		
 			if ( s.getIntenVec() <= 0.01)
 				continue ;
 
@@ -1017,7 +1029,41 @@ public class layerNet extends framework {
 			Node newNode = graph.getNode(idNode ) ;
 			
 			// compute vector
-			double[] vec = lSeed.getVector(s);	
+			double[] vec = lSeed.getVector(s, typeVectorField.gravity);	
+	//		s.setVec(vec[0], vec[1]);	
+			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+			
+			// set coordinates of new node
+			newNode.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+			
+			// create edge
+			idEdge = Integer.toString(idEdgeInt+1 );
+			graph.addEdge(idEdge, oldNode, newNode) ;
+			
+			// link seed to node
+			s.setNode(newNode);
+			idNodeInt++;
+			idEdgeInt++;
+		}
+	}
+	
+	public void updateLayerAndSeeds ( typeVectorField typeVectorField ) {
+		
+		System.out.println("numberNodes "+ graph.getNodeCount());
+		System.out.println("numberSeeds "+ lSeed.getListSeeds().size());
+		
+		for ( seed s : lSeed.getListSeeds() ) {
+			
+			// get old node
+			Node oldNode = s.getNode();	
+			
+			// get cooord of potential node
+			idNode = Integer.toString(idNodeInt)  ;
+			graph.addNode( idNode ) ; 
+			Node newNode = graph.getNode(idNode ) ;
+			
+			// compute vector
+			double[] vec = lSeed.getVector(s , typeVectorField );	
 	//		s.setVec(vec[0], vec[1]);	
 			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
 			
@@ -1083,7 +1129,6 @@ public class layerNet extends framework {
 	}
 
 // GET NODES ----------------------------------------------------------------------------------------------------------------------------------------
-	
 	// get nearest node
 	private Node getNearestNode ( Node node , ArrayList<Node> listNodes ) {
 		

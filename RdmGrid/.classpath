@@ -6,5 +6,6 @@
 	<classpathentry kind="lib" path="D:/ownCloud/JAVA/libraries/graphstream/gs-core-1.3.jar"/>
 	<classpathentry kind="lib" path="D:/ownCloud/JAVA/libraries/graphstream/gs-ui-1.3.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/NetViz"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/RdmGsaNet"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
