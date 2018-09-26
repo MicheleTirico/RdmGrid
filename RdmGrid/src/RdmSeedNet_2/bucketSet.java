@@ -57,7 +57,7 @@ public class bucketSet extends framework {
 	}
 
 	// get list nodes in radius
-	protected ArrayList<Node> getNodesInRadius ( Node n , double radius ) {
+	protected ArrayList<Node> getNodesInRadius ( Node n , double radius ) { 
 		double[] coords = GraphPosLengthUtils.nodePosition(n) ;
 		double X = coords[0] , Y = coords[1] ;
 		ArrayList<Node> list = new ArrayList<Node>( );		

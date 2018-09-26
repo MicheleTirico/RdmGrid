@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
@@ -61,7 +62,7 @@ public class layerSeed extends framework {
 		seeds.add( new seed(X, Y, 0, 0 , n) ) ;
 	}
 	
-	public void initializationSeedCircle ( int numNodes , double radius ) {
+public void initializationSeedCircle ( int numNodes , double radius ) {
 		
 		Graph graph = lNet.getGraph() ;
 		double[] centerLayerRd = lRd.getCenter () ;
@@ -96,6 +97,48 @@ public class layerSeed extends framework {
 			bks.putNode(n);
 		}
 
+	}
+
+
+	public void initializationSeedCircle ( int numNodes , double radius , double centerX , double centerY) {
+		
+ 		Graph graph = lNet.getGraph() ;
+		double angle = 2 * Math.PI / numNodes ;		
+		int nodeCount = graph.getNodeCount() ;
+		
+		Node old = null  ;
+		ArrayList<Node> listNodes = new ArrayList<Node>();
+		
+		for ( idNodeInt = nodeCount  ; idNodeInt <nodeCount + numNodes ; idNodeInt++ ) {
+			
+			double 	coordX = radius * Math.cos( idNodeInt * angle ) ,
+					coordY = radius * Math.sin( idNodeInt * angle ) ;
+					
+			idNode =  Integer.toString(idNodeInt) ;
+			graph.addNode(idNode) ;
+			Node n = graph.getNode(idNode);
+			
+			n.addAttribute("xyz", centerX + coordX ,  centerY + coordY , 0 );
+			listNodes.add(n);
+			lSeed.createSeed(centerX + coordX, centerY + coordY , n);
+	
+			try {
+				idEdge = Integer.toString(idEdgeInt+1 );
+				Edge e = graph.addEdge(idEdge, n, old);
+				e.addAttribute("length", getDistGeom(n,old));
+				idEdgeInt++;
+			} catch (NullPointerException e)  {			//		e.printStackTrace();
+			
+			}
+			old = n ;
+		}	
+		idEdge = Integer.toString(idEdgeInt+1 );
+		Edge e = graph.addEdge(idEdge, old, listNodes.get(0));
+		e.addAttribute("length", getDistGeom(listNodes.get(0),old));
+		idEdgeInt++;
+		 
+		for ( Node n : graph.getEachNode()) 
+			bks.putNode(n);	
 	}
 	
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------	
@@ -132,10 +175,89 @@ public class layerSeed extends framework {
 			case slope :
 				vector = getVectorSlope(s);
 				break;
+			case slopeDistance :
+				vector = getVectorSlopeDistance(s);
+				break;
+			case slopeRadius :
+				vector = getVectorSlopeRadius(s);
+				break;
+			case slopeDistanceRadius :
+				vector = getVectorSlopeDistanceRadius(s);
+				break;
 		}
 		return vector ;
 	}
 	
+	// get vector slope distance
+	private double[] getVectorSlopeDistance ( seed s ) {
+		double sX = s.getX() , sY = s.getY() ;
+
+		cell 	c00 = lRd.getCell( (int) Math.floor(sX),(int) Math.floor(sY)), 
+				c11 = lRd.getCell( (int) Math.ceil(sX),(int) Math.ceil(sY)),
+				c01 = lRd.getCell( (int) Math.floor(sX),(int) Math.ceil(sY)),
+				c10 = lRd.getCell( (int) Math.ceil(sX),(int) Math.floor(sY));
+		
+		double 	val00 = lRd.getValMorp(c00, m, true) , 
+				val11 = lRd.getValMorp(c11, m, true) ,
+				val01 = lRd.getValMorp(c01, m, true) ,
+				val10 = lRd.getValMorp(c10, m, true) ,
+
+				distXfloor = Math.pow(1+Math.abs(sY - Math.floor(sY)), 2), 
+				distXceil = Math.pow(1+Math.abs(sY - Math.ceil(sY)), 2), 
+				
+				distYfloor = Math.pow(1+Math.abs(sX - Math.floor(sX)), 2), 
+				distYceil =  Math.pow(1+Math.abs(sX - Math.ceil(sX)), 2); 
+		
+		double 	vecX = ( val10 - val00) / distYfloor + ( val11 - val01 ) / distYceil ,
+				vecY = ( val01 - val00) / distXfloor + ( val11 - val10 ) / distXceil ;
+					
+		if ( Double.isNaN(vecX))			vecX = 0 ;
+		if ( Double.isNaN(vecY))			vecY = 0 ;
+
+		s.setVec(-vecX, -vecY);
+		return new double[] {-vecX ,-vecY} ;
+	}
+		
+	// get vector slope radius
+	private double[] getVectorSlopeRadius ( seed s ) {
+		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0 ;
+		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
+			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {		
+				double 	addVecX = lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) , 
+						addVecY = lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ;
+					
+				vecX = vecX + addVecX ;
+				vecY = vecY + addVecY ;			
+			}
+		vecX = checkValueVector2(vecX, .50) ;
+		vecY = checkValueVector2(vecY, .50) ;
+		
+		s.setVec( -vecX, -vecY);
+		return new double[] {-vecX ,-vecY} ;
+	}
+	
+	// get vector slope distance radius
+	private double[] getVectorSlopeDistanceRadius ( seed s ) {
+		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0 ;
+		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
+			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {		
+			
+				double 	distX = Math.pow(1+Math.abs(sY - y), 2) ,
+						distY = Math.pow(1+Math.abs(sX - x), 2); 
+		
+				double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) ) / distY , 
+						addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
+				
+				vecX = vecX + addVecX ;
+				vecY = vecY + addVecY ;			
+			}
+		vecX = checkValueVector2(vecX, .10) ;
+		vecY = checkValueVector2(vecY, .10) ;
+		
+		s.setVec( -vecX, -vecY);
+		return new double[] {-vecX ,-vecY} ;
+	}
+		
 	// get vector slope
 	private double[] getVectorSlope ( seed s ) {
 		double sX = s.getX() , sY = s.getY() ;
@@ -148,26 +270,14 @@ public class layerSeed extends framework {
 		double 	val00 = lRd.getValMorp(c00, m, false) , 
 				val11 = lRd.getValMorp(c11, m, false) ,
 				val01 = lRd.getValMorp(c01, m, false) ,
-				val10 = lRd.getValMorp(c10, m, false) ,
-				distXfloor = Math.pow(sY - Math.floor(sY), 1), 
-				distXceil = Math.pow(sY - Math.ceil(sY), 1), 
-				
-				distYfloor = Math.pow(sX - Math.floor(sX), 1), 
-				distYceil = Math.pow(sX - Math.ceil(sX), 1); 
-				
-		//		System.out.println(distXceil + " " + distXfloor);
-				double 	vecX = (-val00 + val10) - (val10 - val11) ,
-						vecY = (-val00 + val01) + (val01 - val11) ;
-					
-		if ( Double.isNaN(vecX))			vecX = 0 ;
-		if ( Double.isNaN(vecY))			vecY = 0 ;
+				val10 = lRd.getValMorp(c10, m, false) ;
+			
+		double 	vecX = val10 - val00 + val11 - val01 ,
+				vecY = val01- val00 + val11 - val10 ;
 		
-		vecX = checkValueVector(vecX, 1.0) ;
-		vecY = checkValueVector(vecY, 1.0) ;
-		
-//		System.out.println(vecX);		
-//		System.out.println(vecY);	
-
+		vecX = checkValueVector2(vecX, .10) ;
+		vecY = checkValueVector2(vecY, .10) ;
+							
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
 	}
@@ -186,8 +296,8 @@ public class layerSeed extends framework {
 					continue ;
 				}
 			}
-		vecX = checkValueVector(vecX, 1.0) ;
-		vecY = checkValueVector(vecY, 1.0) ;
+		vecX = checkValueVector2(vecX, 1.0) ;
+		vecY = checkValueVector2(vecY, 1.0) ;
 		
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
@@ -207,6 +317,20 @@ public class layerSeed extends framework {
 			return vec;
 	}
 	
+	// check max value of vector 
+	private double checkValueVector2 (double vec , double valMax) { 
+		double 	vecAbs = Math.abs(vec) , 
+				valMaxAbs = Math.abs(valMax);
+		
+		if ( vecAbs > valMaxAbs )
+			if ( vec > 0.0 )
+				return valMax;
+			else 
+				return -valMax ;
+		else 
+			return vec;
+	}
+	
 	// not used
 	private double ceckPositionVector (double vector ,double posCell , double posSeed, double val) {
 		vector = vector / Math.pow(posCell - posSeed, alfa) ;	
@@ -219,7 +343,11 @@ public class layerSeed extends framework {
 	
 	// check distance between seed and cell
 	private double ceckPositionVectorGravity (double posCell , double posSeed, double val) {
-		double v = Ds * g * val / Math.pow(posCell - posSeed, alfa);
+		
+//		double v = Ds * g * val / (1 + Math.pow(Math.abs(posCell - posSeed), alfa));
+		
+		double v = Ds * g * val / Math.pow(1 + Math.abs(posCell - posSeed), alfa);
+//		double v = Ds * g * val / Math.pow(posCell - posSeed, alfa);
 		if ( posCell == posSeed)
 			return 0 ;
 		if ( posCell < posSeed)

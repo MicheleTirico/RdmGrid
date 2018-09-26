@@ -20,7 +20,7 @@ import RdmSeedNet_2.layerRd.typeDiffusion;
 public class run extends framework {
 
 	static double  f , k  , Da = 0.2, Db = 0.1 ;	
-	static double g = 1, alfa = 2 , Ds = 1	, r = 4;
+	static double g = 1, alfa = 2 , Ds = 10	, r = 10 ;
 	
 	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
 	private static RdmType type ;
@@ -34,33 +34,42 @@ public class run extends framework {
 		
 		lRd = new layerRd(1, 1, 200, 200);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setValueOfCellAround(1, 1, 100, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 100, 100, 5);		//		lRd.setValueOfCell(1, 1, 25, 25)
+	
+//		lRd.setValueOfCellAround(1, 1, 90, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
-		setRdType ( RdmType.spotsAndLoops ) ;
+		setRdType ( RdmType.f055_k062 ) ;
 	//	System.out.println(f + " " + k);
-		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
+		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed );
 	
 		lNet = new layerNet("net") ;
 		Graph gra = lNet.getGraph();
 		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
-		lSeed.initializationSeedCircle(20, 4);
+		 
+		lSeed.initializationSeedCircle(20, 4, 105,105);
+		lSeed.initializationSeedCircle(20, 4, 95,105);
+	
+		lSeed.initializationSeedCircle(20, 4, 105,95);
+		lSeed.initializationSeedCircle(20, 4, 95,95);
+	
 		lNet.setLengthEdges("length" , true );
 		
-		for ( int t = 0 ; t < 500  ; t++) {			
+		for ( int t = 0 ; t < 50  ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
 		//	lNet.updateLayerAndSeeds2();
 		//	lNet.updateLayerAndSeeds10();
-			lNet.updateLayerAndSeeds(typeVectorField.slope);
+			lNet.updateLayers_01(typeVectorField.slope);
+//			lNet.updateLayerAndSeeds(typeVectorField.slope);
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
 		
 		for ( seed s : lSeed.getListSeeds()) {
 			s.getNode().setAttribute("seed", 1);
-			System.out.println(s.getIntenVec() + " " + s.getVecX() +" " + s.getVecY());
+//			System.out.println(s.getIntenVec() + " " + s.getVecX() +" " + s.getVecY());
 		}
 		
 
@@ -70,7 +79,7 @@ public class run extends framework {
 		netViz.setupIdViz(false , gra, 20 , "black");
 		netViz.setupDefaultParam (gra, "black", "black", 5 , 0.5 );
 		netViz.setupVizBooleanAtr(true, gra, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( true  , gra, 200 , 0);
+		netViz.setupFixScaleManual( false  , gra, 200 , 0);
 	
 		gra.display(false);
 		

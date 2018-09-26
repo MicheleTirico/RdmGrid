@@ -1080,7 +1080,127 @@ public class layerNet extends framework {
 			idEdgeInt++;
 		}
 	}
+
+	public void updateLayers_01 ( typeVectorField typeVectorField ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+		
+		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
+		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
+		for ( seed s : lSeed.getListSeeds() ) {
+			
+			// get old node
+			Node nodeS = s.getNode();	
+			
+			// get cooord of potential node
+			idNode = Integer.toString(idNodeInt)  ;
+			graph.addNode( idNode ) ; 
+			Node nodeF = graph.getNode(idNode ) ;
+			bks.putNode(nodeF);
+			// compute vector
+			double[] vec = lSeed.getVector(s , typeVectorField );	
+			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+			
+			// set coordinates of new node
+			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+			
+			// create edge
+			idEdge = Integer.toString(idEdgeInt+1 );
+			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
+			e.addAttribute("length", getDistGeom(nodeS,nodeF));
+		
+			// link seed to node
+			s.setNode(nodeF);
+			idNodeInt++;
+			idEdgeInt++;
+			
+			handleRadius_02(s, dijkstra, listSeedsToRemove, nodeF, nodeS);
+			
+		}
+		for ( seed s : listSeedsToRemove) 
+			lSeed.removeSeed(s);
+	}
 	
+	private void handleRadius_02 ( seed s , Dijkstra dijkstra , ArrayList<seed> listSeedsToRemove, Node nodeF , Node nodeS ) {
+		
+		Node source = nodeF ;
+        Iterator<? extends Node> iter = source.getDepthFirstIterator() ;
+        ArrayList <Node> listNodeToRemove = new ArrayList<Node>();
+        ArrayList <Node> listNodeToConnect = new ArrayList<Node>();
+        ArrayList <Node> listNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, .1));
+        
+		dijkstra.setSource(nodeF);
+		dijkstra.init(graph);
+		dijkstra.compute();
+		
+        while (iter.hasNext() && ! listNodes.isEmpty() ) {
+            Node next = iter.next();
+            int lenTopo = dijkstra.getPath(next).size() - 2; 	
+            listNodes.remove(next);
+            if ( lenTopo >= 2 && listNodes.contains(next) ) {
+            	listNodeToConnect.add(next); 
+            } else {
+            	listNodeToRemove.add(next);
+            	listNodeToConnect.addAll(getListNeighbors(next));
+            }
+            
+           
+          /*
+            if ( lenTopo <=  2 && ! listNodeToConnect.contains(next) &&  listNodes.contains(next)  ) {
+            	listNodeToRemove.add(next);
+            	listNodeToConnect.addAll(getListNeighbors(next));
+            	
+            } else {
+            	listNodeToConnect.add(next);        
+            	listSeedsToRemove.add(s) ;
+          //  	listNodes.remove(next);
+            }
+            listNodes.remove(next);
+           */
+        }
+        
+        for ( Node n : listNodeToRemove )    	graph.removeNode(n);
+        
+        for (Node n : listNodeToConnect ) {
+        	try {
+	        	idEdge = Integer.toString(idEdgeInt+1 );
+				Edge ed = graph.addEdge(idEdge, n , nodeF) ;
+				ed.addAttribute("length", getDistGeom(n,nodeF));
+		 		idEdgeInt++;
+        	} catch (EdgeRejectedException e) {
+				// TODO: handle exception
+			}
+        } 
+	}
+	
+	private void handleRadius ( seed s , Dijkstra dijkstra , ArrayList<seed> listSeedsToRemove, Node nodeF , Node nodeS ) {
+		// get radius
+		double distCeck = s.getIntenVec() ;
+	
+		ArrayList <Node> listNearest = new ArrayList<Node> ( bks.getNodesInRadius(nodeF, distCeck));	//	System.out.println(nodeF + " " + nodeS + " " +listNearest);
+		listNearest.remove(nodeS) ;
+		Map < Node , Double> mapNodeDist = getMapNodeDist(nodeF, listNearest, 20);
+		if ( ! listNearest.isEmpty()  ) { // System.out.println(nearest + " " + listNearest);
+			
+			for ( Node nearest : mapNodeDist.keySet()) { 
+		
+				dijkstra.setSource(nodeF);
+				dijkstra.init(graph);
+				dijkstra.compute();
+				int lenTopo = dijkstra.getPath(nearest).size() - 2;		//		System.out.println(nearest + " " + nodeF + dijkstra.getPath(nearest));
+				
+				// create edge
+				if ( lenTopo > 2 ) {
+					System.out.println(nearest + " " + nodeF + dijkstra.getPath(nearest));
+					idEdge = Integer.toString(idEdgeInt+1 );
+					Edge ed = graph.addEdge(idEdge, nearest , nodeF) ;
+					ed.addAttribute("length", getDistGeom(nearest,nodeF));
+			 		idEdgeInt++;
+					listSeedsToRemove.add(s);
+//								break ;
+				}
+			}
+		}	
+	}
+
 	private void addNode( seed s ) {
 		idNode =  Integer.toString(idNodeInt) ;
 		graph.addNode(idNode);
@@ -1146,19 +1266,7 @@ public class layerNet extends framework {
 		return nearest ;
 	}
 	
-	// get spatial distance from 2 nodes 
-	public static double getDistGeom ( Node n1 , Node n2 ) {	
 		
-		double [] 	coordN1 = GraphPosLengthUtils.nodePosition(n1) , 
-					coordN2 = GraphPosLengthUtils.nodePosition(n2); 
-		
-		return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
-	}
-	
-	public static double getDistGeom ( double [] coordN1 , double [] coordN2 ) {			
-		return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
-	}
-	
 // GET EDGES ----------------------------------------------------------------------------------------------------------------------------------------
 
 	// get length edge
@@ -1400,6 +1508,7 @@ public class layerNet extends framework {
 			if ( !listNeig.contains(neig) )
 				listNeig.add(neig);
 		}
+		listNeig.remove(node) ;
 		return listNeig ;
 	}
 	
