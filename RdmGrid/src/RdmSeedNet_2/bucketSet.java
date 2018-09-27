@@ -64,7 +64,7 @@ public class bucketSet extends framework {
 		for ( double x = X - radius ; x <= X + radius ; x = x + sizeX ) 
 			for ( double y = Y - radius ; y <= Y + radius ; y = y + sizeY ) 	
 				for (Node no : getBucket(x, y).getistNodes()) 
-					if (!list.contains(no) && layerNet.getDistGeom(no, n) < radius )
+					if (!list.contains(no) && getDistGeom(no, n) < radius )
 						list.add(no);	
 		list.remove(n);
 		return list;

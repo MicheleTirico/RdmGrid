@@ -275,8 +275,8 @@ public void initializationSeedCircle ( int numNodes , double radius ) {
 		double 	vecX = val10 - val00 + val11 - val01 ,
 				vecY = val01- val00 + val11 - val10 ;
 		
-		vecX = checkValueVector2(vecX, .10) ;
-		vecY = checkValueVector2(vecY, .10) ;
+		vecX = checkValueVector2(vecX, .05) ;
+		vecY = checkValueVector2(vecY, .05) ;
 							
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;

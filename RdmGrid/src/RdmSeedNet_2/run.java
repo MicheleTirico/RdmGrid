@@ -25,17 +25,18 @@ public class run extends framework {
 	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
 	private static RdmType type ;
 	
-	public static void main(String[] args) {
-		
-		
-		  
+	public static void main(String[] args) {		
+	
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
 		lRd = new layerRd(1, 1, 200, 200);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setValueOfCellAround(1, 1, 100, 100, 5);		//		lRd.setValueOfCell(1, 1, 25, 25)
-	
+		lRd.setValueOfCellAround(1, 1, 120, 120, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 80, 120, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 120, 80, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 80, 80, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		
 //		lRd.setValueOfCellAround(1, 1, 90, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
 		setRdType ( RdmType.f055_k062 ) ;
@@ -47,22 +48,25 @@ public class run extends framework {
 		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 		 
-		lSeed.initializationSeedCircle(20, 4, 105,105);
-		lSeed.initializationSeedCircle(20, 4, 95,105);
-	
-		lSeed.initializationSeedCircle(20, 4, 105,95);
-		lSeed.initializationSeedCircle(20, 4, 95,95);
-	
+//		lSeed.initializationSeedCircle(20, 4, 105,105);
+//		lSeed.initializationSeedCircle(20, 4, 95,105);
+//	
+		lSeed.initializationSeedCircle(20, 4, 120,120);
+		lSeed.initializationSeedCircle(20, 4, 80,120);
+		lSeed.initializationSeedCircle(20, 4, 120,80);
+		lSeed.initializationSeedCircle(20, 4, 80,80);
+		
 		lNet.setLengthEdges("length" , true );
 		
-		for ( int t = 0 ; t < 50  ; t++) {			
+		for ( int t = 0 ; t < 2000  ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
 		//	lNet.updateLayerAndSeeds2();
 		//	lNet.updateLayerAndSeeds10();
-			lNet.updateLayers_01(typeVectorField.slope);
+//			lNet.updateLayers_01(typeVectorField.slope);
 //			lNet.updateLayerAndSeeds(typeVectorField.slope);
+			lNet.updateLayers_02(typeVectorField.slope , 0.1 , 50 );
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
