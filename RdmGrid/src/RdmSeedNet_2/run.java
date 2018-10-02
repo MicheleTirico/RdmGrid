@@ -32,10 +32,10 @@ public class run extends framework {
 		
 		lRd = new layerRd(1, 1, 200, 200);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setValueOfCellAround(1, 1, 120, 120, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 80, 120, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 120, 80, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 80, 80, 3);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 110, 110, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 90, 110, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 110, 90, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
+		lRd.setValueOfCellAround(1, 1, 90, 90, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
 //		lRd.setValueOfCellAround(1, 1, 90, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
 		
@@ -51,14 +51,14 @@ public class run extends framework {
 //		lSeed.initializationSeedCircle(20, 4, 105,105);
 //		lSeed.initializationSeedCircle(20, 4, 95,105);
 //	
-		lSeed.initializationSeedCircle(20, 4, 120,120);
-		lSeed.initializationSeedCircle(20, 4, 80,120);
-		lSeed.initializationSeedCircle(20, 4, 120,80);
-		lSeed.initializationSeedCircle(20, 4, 80,80);
+		lSeed.initializationSeedCircle(20, 8, 110,110);
+		lSeed.initializationSeedCircle(20, 8, 90,110);
+		lSeed.initializationSeedCircle(20, 8, 110,90);
+		lSeed.initializationSeedCircle(20, 8, 90,90);
 		
 		lNet.setLengthEdges("length" , true );
 		
-		for ( int t = 0 ; t < 2000  ; t++) {			
+		for ( int t = 0 ; t < 10000  ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
@@ -66,12 +66,13 @@ public class run extends framework {
 		//	lNet.updateLayerAndSeeds10();
 //			lNet.updateLayers_01(typeVectorField.slope);
 //			lNet.updateLayerAndSeeds(typeVectorField.slope);
-			lNet.updateLayers_02(typeVectorField.slope , 0.1 , 50 );
+			lNet.updateLayers_03(typeVectorField.slope , 0.2 , 50 );
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
 		
 		for ( seed s : lSeed.getListSeeds()) {
+			
 			s.getNode().setAttribute("seed", 1);
 //			System.out.println(s.getIntenVec() + " " + s.getVecX() +" " + s.getVecY());
 		}
