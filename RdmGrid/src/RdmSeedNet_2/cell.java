@@ -7,16 +7,18 @@ class cell{
     private int X;
     private int Y;
     private double val1,val2 ;
-
+    private boolean isMaxLocal ;
+    
     public cell() {
-        this(0,0,0,0);
+        this(0,0,0,0 ,false );
     }        
     
-    public cell(int X, int Y , double val1 , double val2) {
+    public cell(int X, int Y , double val1 , double val2 , boolean isMaxLocal ) {
         this.X = X;
         this.Y = Y;
         this.val1=val1;
         this.val2=val2;
+        this.isMaxLocal = isMaxLocal ;
     }
   
  // GET METHODS -------------------------------------------------------------------------------------------------------------------------------------- 
@@ -35,6 +37,10 @@ class cell{
     public double getVal2() {
     	return val2;
     }
+    
+    public boolean isMaxLocal ( ) {
+    	return isMaxLocal;
+    }
    
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
     public void setX(int X) {
@@ -46,5 +52,12 @@ class cell{
     public void setVals(double val1, double val2) {
     	this.val1 = val1;
     	this.val2 = val2;
+    }
+    
+    public void setMaxLocal ( boolean val) {
+    	if ( val )
+    		isMaxLocal = true ;
+    	else 
+    		isMaxLocal = false ;
     }
 }

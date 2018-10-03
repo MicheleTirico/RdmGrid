@@ -27,20 +27,25 @@ public abstract class framework  {
 	protected enum morphogen { a , b }		
 	protected enum typeVectorField { gravity , slope , slopeDistance , slopeRadius , slopeDistanceRadius } 
 	
-	
+// GET METHODS --------------------------------------------------------------------------------------------------------------------------------------	
 	// get spatial distance from 2 nodes 
-		public static double getDistGeom ( Node n1 , Node n2 ) {	
-			
-			double [] 	coordN1 = GraphPosLengthUtils.nodePosition(n1) , 
-						coordN2 = GraphPosLengthUtils.nodePosition(n2); 
-			
-			return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
-		}
+	public static double getDistGeom ( Node n1 , Node n2 ) {	
 		
-		public static double getDistGeom ( double [] coordN1 , double [] coordN2 ) {			
-			return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
-		}
+		double [] 	coordN1 = GraphPosLengthUtils.nodePosition(n1) , 
+					coordN2 = GraphPosLengthUtils.nodePosition(n2); 
+		
+		return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
+	}
+	
+	public static double getDistGeom ( double [] coordN1 , double [] coordN2 ) {			
+		return  Math.pow(Math.pow( coordN1[0] - coordN2[0] , 2 ) + Math.pow( coordN1[1] - coordN2[1] , 2 ), 0.5 )  ;
+	}
 
+	public static void initMultiCircle ( double valA , double valB , int numNodes , int centreX ,int centreY , int radiusRd , int radiusNet ) {
+		
+		lRd.setValueOfCellAround(valA, valB, centreX, centreY, radiusRd);			 
+		lSeed.initializationSeedCircle(20, radiusNet, centreX,centreY);
+	}
 	
 	
 	

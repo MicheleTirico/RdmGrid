@@ -43,7 +43,6 @@ public class layerSeed extends framework {
 		for ( Node n : lNet.getGraph().getEachNode() ) {
 			double[] pos = GraphPosLengthUtils.nodePosition(n ) ;
 			createSeed(pos[0], pos[1]);
-	//		seed s = lSeed.getSeed
 		}
 	}
 	
@@ -62,7 +61,7 @@ public class layerSeed extends framework {
 		seeds.add( new seed(X, Y, 0, 0 , n) ) ;
 	}
 	
-public void initializationSeedCircle ( int numNodes , double radius ) {
+	public void initializationSeedCircle ( int numNodes , double radius ) {
 		
 		Graph graph = lNet.getGraph() ;
 		double[] centerLayerRd = lRd.getCenter () ;

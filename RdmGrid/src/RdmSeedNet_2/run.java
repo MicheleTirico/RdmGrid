@@ -1,6 +1,7 @@
 package RdmSeedNet_2;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javax.swing.JApplet;
 import javax.swing.JFrame;
@@ -16,6 +17,7 @@ import RdmGsaNetViz.handleVizStype;
 import RdmGsaNetViz.handleVizStype.stylesheet;
 import RdmSeedNet_2.layerNet.typeSetupLayer;
 import RdmSeedNet_2.layerRd.typeDiffusion;
+import RdmSeedNet_2.layerRd.typeInitializationMaxLocal;
 
 public class run extends framework {
 
@@ -30,49 +32,42 @@ public class run extends framework {
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
-		lRd = new layerRd(1, 1, 200, 200);		
+		lRd = new layerRd(1, 1, 200, 200, true);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setValueOfCellAround(1, 1, 110, 110, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 90, 110, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 110, 90, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		lRd.setValueOfCellAround(1, 1, 90, 90, 6);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		
-//		lRd.setValueOfCellAround(1, 1, 90, 100, 2);		//		lRd.setValueOfCell(1, 1, 25, 25)
-		
-		setRdType ( RdmType.f055_k062 ) ;
-	//	System.out.println(f + " " + k);
-		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed );
+		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b);
+				
+		setRdType ( RdmType.f055_k062 ) ;	//	System.out.println(f + " " + k);
+		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 	
 		lNet = new layerNet("net") ;
 		Graph gra = lNet.getGraph();
-		
+	
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
-		 
-//		lSeed.initializationSeedCircle(20, 4, 105,105);
-//		lSeed.initializationSeedCircle(20, 4, 95,105);
-//	
-		lSeed.initializationSeedCircle(20, 8, 110,110);
-		lSeed.initializationSeedCircle(20, 8, 90,110);
-		lSeed.initializationSeedCircle(20, 8, 110,90);
-		lSeed.initializationSeedCircle(20, 8, 90,90);
+	
+		ArrayList<int[]> setCentres = new ArrayList<int[]> (Arrays.asList(
+				new int[] {100,100}, 
+				new int[] {110,110}, 
+				new int[] {90,90}, 
+				new int[] {90,110}, 
+				new int[] {110,90} ));
 		
+		for ( int[] centre : setCentres )
+			initMultiCircle(1, 1, 20 , centre[0] , centre[1] , 2 , 4 );
+		
+//		initMultiCircle(1, 1, 20 , 100 ,100 , 2 , 4 );
 		lNet.setLengthEdges("length" , true );
 		
-		for ( int t = 0 ; t < 10000  ; t++) {			
+		for ( int t = 0 ; t < 500 ; t++) {			
 			
 			System.out.println("------------- step " +t);
 			lRd.updateLayer();
-		//	lNet.updateLayerAndSeeds2();
-		//	lNet.updateLayerAndSeeds10();
-//			lNet.updateLayers_01(typeVectorField.slope);
-//			lNet.updateLayerAndSeeds(typeVectorField.slope);
-			lNet.updateLayers_03(typeVectorField.slope , 0.2 , 50 );
+			lRd.computeMaxLocal();
+			lNet.updateLayers_04(typeVectorField.slope , 4 , true , 0.2 );
 			if ( lSeed.getListSeeds().isEmpty())
 				break;
 		}
 		
-		for ( seed s : lSeed.getListSeeds()) {
-			
+		for ( seed s : lSeed.getListSeeds()) {		
 			s.getNode().setAttribute("seed", 1);
 //			System.out.println(s.getIntenVec() + " " + s.getVecX() +" " + s.getVecY());
 		}
@@ -84,7 +79,7 @@ public class run extends framework {
 		netViz.setupIdViz(false , gra, 20 , "black");
 		netViz.setupDefaultParam (gra, "black", "black", 5 , 0.5 );
 		netViz.setupVizBooleanAtr(true, gra, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( false  , gra, 200 , 0);
+		netViz.setupFixScaleManual( true , gra, 200 , 0);
 	
 		gra.display(false);
 		

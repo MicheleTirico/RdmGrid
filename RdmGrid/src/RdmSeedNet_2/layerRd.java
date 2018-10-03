@@ -1,13 +1,8 @@
 package RdmSeedNet_2;
 
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
-
-import javax.swing.JApplet;
 
 import RdmSeedNet_2.framework.morphogen;
 
@@ -16,24 +11,31 @@ public class layerRd extends framework   {
 	private double sizeX, sizeY;
 	private int numCellX, numCellY;
 	private cell[][] cells ;
+	private ArrayList<cell> listMaxLocal = new ArrayList<cell>() ;
+	private morphogen m ;
+	
 	private  double f ,  k ,  Da,  Db ;
 	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
 	private static RdmType type ;
-
+	private boolean computeMaxLocal ;
+	
+	public enum typeInitializationMaxLocal{ test , singlePoint , allPointActive}
+	private typeInitializationMaxLocal typeInitializationMaxLocal ;
 	public enum typeNeighbourhood { moore, vonNewmann , m_vn }
 	
 	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
 	private typeDiffusion typeDiffusion ;
 	
 	public layerRd ( ) {
-		this(0,0,0,0);	
+		this(0,0,0,0,false);	
 	}
 
-	public layerRd(double sizeX, double sizeY , int numCellX, int numCellY) {
+	public layerRd(double sizeX, double sizeY , int numCellX, int numCellY , boolean computeMaxLocal) {
 		this.sizeX = sizeX ;
 		this.sizeY = sizeY ;
 		this.numCellX = numCellX ;
-		this.numCellY = numCellY;
+		this.numCellY = numCellY ;
+		this.computeMaxLocal = computeMaxLocal ;
 		cells = new cell[numCellX][numCellY];
 	}
 
@@ -41,7 +43,7 @@ public class layerRd extends framework   {
 	public void initializeCostVal ( double val1 , double val2 ) {
 		for (int x = 0; x<numCellX; x++)
 			for (int y = 0; y<numCellY; y++) {
-				cell c = new cell(x,y,val1, val2);
+				cell c = new cell(x,y,val1, val2, false);
 				cells[x][y] = c ;
 				putCellInList(c);			
 			}
@@ -50,25 +52,69 @@ public class layerRd extends framework   {
 	public void initializeRandomVal ( int seedRd1, int seedRd2, double minVal1, double minVal2 , double maxVal1 , double maxVal2) {
 		for (int x = 0; x<numCellX; x++)
 			for (int y = 0; y<numCellY; y++) {
-				cell c = new cell(x,y,getValRd(seedRd1, minVal1, maxVal1), getValRd(seedRd2, minVal2, maxVal2));
+				cell c = new cell(x,y,getValRd(seedRd1, minVal1, maxVal1), getValRd(seedRd2, minVal2, maxVal2), false);
 				cells[x][y] = c ;
 				putCellInList(c);			
 			}	
 	}	
 	
-// VIZ METHODS --------------------------------------------------------------------------------------------------------------------------------------
+// compute max local --------------------------------------------------------------------------------------------------------------------------------
+	
+	public void setInitMaxLocal ( typeInitializationMaxLocal typeInitializationMaxLocal,  morphogen m  ) {
+		this.typeInitializationMaxLocal = typeInitializationMaxLocal  ;
+		this.m = m ;
+	}
+	
+	private void initializeMaxLocal ( int posX , int posY  ) {	
+				listMaxLocal.add(cells[posX][posY]);
+				cells[posX][posY].setMaxLocal(true);		
+	}
+	
+	public void computeMaxLocal ( ) {
+		
+		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ;
+		ArrayList<cell>  listCellToRemove = new ArrayList<cell>() ;
+		for ( cell cellMax : listMaxLocal ) {
+			ArrayList<cell> listNeig = getListNeighbors(typeNeighbourhood.vonNewmann, cellMax.getX(), cellMax.getY()) ;
+		//	listNeig.add(cellMax);
+			for ( cell c : listNeig ) {
+				int posX = c.getX(), posY = c.getY();
+				double val = getValMorp(c, m, false);
+				if ( ! listCellToAdd.contains(c) && ! listMaxLocal.contains(c) ) 
+					if ( val > getValMorp(getCell(posX+1, posY), m, true) && val > getValMorp(getCell(posX-1, posY), m, true)) 
+						if ( val > getValMorp(getCell(posX, posY+1), m, true) && val > getValMorp(getCell(posX, posY-1), m, true)) {
+							listCellToAdd.add(c);
+							listCellToRemove.add(cellMax);								
+						}
+			}
+		}
+		
+		listCellToAdd.stream().forEach(c -> addMaxLocal(c));
+		listCellToRemove.stream().forEach(c -> removeMaxLocal(c));
 
+	}
+	
+	protected void addMaxLocal (cell c) {
+		listMaxLocal.add(c);
+		cells[c.getX()][c.getY()].setMaxLocal(true);		
+	}
+	
+	protected void removeMaxLocal (cell c) {
+		listMaxLocal.remove(c);
+		cells[c.getX()][c.getY()].setMaxLocal(false);			
+	}
+	
 	
 // RULES --------------------------------------------------------------------------------------------------------------------------------------------	
 	// Gray Scott classic model 
 		
 	// set initial parameters of gray scott model
-	public void setGsParameters ( double f , double k , double Da, double Db, typeDiffusion mooreweigthed) {
+	public void setGsParameters ( double f , double k , double Da, double Db, typeDiffusion typeDiffusion) {
 		this.k = k ;
 		this.f = f ;
 		this.Da = Da ;
 		this.Db = Db ;
-		this.typeDiffusion = mooreweigthed;
+		this.typeDiffusion = typeDiffusion;
 	}
 	
 	// set perturbation 
@@ -78,14 +124,21 @@ public class layerRd extends framework   {
 	
 	public void setValueOfCellAround  ( double valA , double valB , int cellX, int cellY, int radius ) {
 		for ( int x = (int) Math.floor(cellX - radius) ; x <= (int) Math.ceil(cellX + radius ) ; x++  )
-			for ( int y = (int) Math.floor(cellY - radius ) ; y <= (int) Math.ceil(cellY + radius ) ; y++  ) 
+			for ( int y = (int) Math.floor(cellY - radius ) ; y <= (int) Math.ceil(cellY + radius ) ; y++  ) {
 				cells[x][y].setVals(valA, valB);			
+				if ( computeMaxLocal && typeInitializationMaxLocal.equals(typeInitializationMaxLocal.allPointActive)) {
+					initializeMaxLocal( x , y );
+				}
+			}
+		if ( computeMaxLocal && typeInitializationMaxLocal.equals(typeInitializationMaxLocal.singlePoint)) 
+			initializeMaxLocal( cellX,  cellY ) ;
+		
 	}
 	
 	// update cells 
 	public void updateLayer (  ) {
 			
-		for ( cell c :listCell ) {
+		for ( cell c : listCell ) {
 			double 	valA = getValMorp(c, morphogen.a, false),
 					valB = getValMorp(c, morphogen.b, false);
 			
@@ -104,6 +157,7 @@ public class layerRd extends framework   {
 					newValB =  valB + diffB + react - extB;
 			c.setVals(newValA, newValB);
 		}
+	
 	}
 	
 	// get Fick's diffusion 
@@ -205,6 +259,13 @@ public class layerRd extends framework   {
 		return new double[] { numCellX * sizeX / 2 , numCellY * sizeY / 2} ;
 	}
 	
+	protected ArrayList<cell> getListMaxLocal () {
+		return listMaxLocal ;
+	}
+	
+	protected int getNumberCellMaxLocal () {
+		return listMaxLocal.size();
+	}
 // private methods ----------------------------------------------------------------------------------------------------------------------------------
 	private double getValRd ( int seedRd, double minRd , double maxRd ) {
 		Random rd = new Random( seedRd );
@@ -235,8 +296,10 @@ public class layerRd extends framework   {
 			return Db;
 	}
 	
+	
+	
 // GET NEIGHBORS ------------------------------------------------------------------------------------------------------------------------------------	 
-	ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
+	protected ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
 		ArrayList<cell> list = new  ArrayList<cell> ();		
 		switch (typeNeighbourhood) {
 			case moore: {
