@@ -7,7 +7,7 @@ class cell{
     private int X;
     private int Y;
     private double val1,val2 ;
-    private boolean isMaxLocal ;
+    private boolean isMaxLocal , hasNode , hasSeed ;
     
     public cell() {
         this(0,0,0,0 ,false );
@@ -19,6 +19,16 @@ class cell{
         this.val1=val1;
         this.val2=val2;
         this.isMaxLocal = isMaxLocal ;
+    }
+    
+    public cell(int X, int Y , double val1 , double val2 , boolean isMaxLocal, boolean hasNode , boolean hasSeed ) {
+        this.X = X;
+        this.Y = Y;
+        this.val1=val1;
+        this.val2=val2;
+        this.isMaxLocal = isMaxLocal ;
+        this.hasNode = hasNode ;
+        this.hasSeed = hasSeed ;
     }
   
  // GET METHODS -------------------------------------------------------------------------------------------------------------------------------------- 
@@ -42,6 +52,13 @@ class cell{
     	return isMaxLocal;
     }
    
+    public boolean hasNode () {
+    	return hasNode;
+    }
+    
+    public boolean hasSeed ( ) {
+    	return hasSeed;
+    }
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
     public void setX(int X) {
         this.X = X;
@@ -59,5 +76,19 @@ class cell{
     		isMaxLocal = true ;
     	else 
     		isMaxLocal = false ;
+    }
+    
+    public void setHasNode ( boolean val ) {
+    	if ( val )
+    		hasNode = true ;
+    	else 
+    		hasNode = false ;
+    }
+    
+    public void setHasSeed ( boolean val ) {
+    	if ( val )
+    		hasSeed = true ;
+    	else 
+    		hasSeed = false ;
     }
 }

@@ -1,38 +1,31 @@
 package RdmSeedNet_2;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.io.IOException;
 
-import javax.swing.JApplet;
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-
-import org.graphstream.graph.Edge;
 import org.graphstream.graph.Graph;
-import org.graphstream.graph.Node;
-import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
+import org.graphstream.stream.file.FileSource;
+import org.graphstream.stream.file.FileSourceDGS;
+import org.graphstream.stream.file.FileSourceFactory;
+import org.graphstream.ui.swingViewer.ViewPanel;
 import org.graphstream.ui.view.Viewer;
 
-import RdmGsaNetAlgo.graphGenerator;
 import RdmGsaNetViz.handleVizStype;
 import RdmGsaNetViz.handleVizStype.stylesheet;
-import RdmSeedNet_2.framework.RdmType;
-import RdmSeedNet_2.framework.morphogen;
-import RdmSeedNet_2.framework.typeVectorField;
-import RdmSeedNet_2.layerNet.typeSetupLayer;
 import RdmSeedNet_2.layerRd.typeDiffusion;
 import RdmSeedNet_2.layerRd.typeInitializationMaxLocal;
 
-public class run extends framework {
+public class runAndViz extends framework {
 
-	static double Da = 0.15, Db = 0.15 ;	
-	static double g = 1, alfa = 2 , Ds = .01	, r = 1 ;
+	private static double  Da = 0.2, Db = 0.1 ;	
+	private static double g = 1, alfa = 2 , Ds = .1 , r = 5 ;
+	
+	// viz 
+	protected static FileSource fs ;
+	private static ViewPanel view ;
 	private static Viewer viewer ;
 	
-	public static void main(String[] args) {		
-		
-		isFeedBackModel(true);
-		
+	public static void main(String[] args) throws  InterruptedException {		
+	
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
@@ -40,16 +33,15 @@ public class run extends framework {
 		lRd.initializeCostVal(1,0);	
 		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b, false);
 			
-		setRdType ( RdmType.movingSpots ) ;	//	System.out.println(f + " " + k);
+		setRdType ( RdmType.f055_k062 ) ;	//	System.out.println(f + " " + k);
 		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed );
-		lRd.setFeedBackParameters(0.3, 0.1);
-		
+	
 		lNet = new layerNet("net") ;
 		Graph netGraph = lNet.getGraph();
 	
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 
-		initMultiCircle(1, 1, 40 , 100 ,100 , 2 , 4 );
+		initMultiCircle(1, 1, 20 , 100 ,100 , 2 , 4 );
 		lNet.setLengthEdges("length" , true );
 
 		// set file Source for file step
@@ -60,26 +52,31 @@ public class run extends framework {
 		netViz.setupIdViz(false , netGraph, 20 , "black");
 		netViz.setupDefaultParam (netGraph, "black", "black", 1 , 0.5 );
 		netViz.setupVizBooleanAtr(true, netGraph, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( false , netGraph, 200 , 0);
+		netViz.setupFixScaleManual( true , netGraph, 200 , 0);
 	
 		// only for viz
 		for ( seed s : lSeed.getListSeeds()) 	
 			s.getNode().setAttribute("seed", 1);	
 		
 		int t = 0 ;
-		while ( t < 5000 && ! lSeed.getListSeeds().isEmpty()  ) {	
-			System.out.println("------------- step " +t);
-			lRd.updateLayer();
-			lRd.computeMaxLocal();
-			lNet.updateLayers_04(typeVectorField.slopeDistanceRadius , 4 , false , 1 );
-		//	Thread.sleep(1);
-			t++;
-	
+		while ( t < 100  ) {
+			if ( ! lSeed.getListSeeds().isEmpty() ) {
+				System.out.println("------------- step " +t);
+				lRd.updateLayer();
+				lRd.computeMaxLocal();
+				lNet.updateLayers_04(typeVectorField.gravity , 4 , true , 1 );
+		//		Thread.sleep(1);
+				t++;
+			}
+			
 		}
-	}
 	
 
-	
+
 		
+	
+	}
+
+	
 		
 }

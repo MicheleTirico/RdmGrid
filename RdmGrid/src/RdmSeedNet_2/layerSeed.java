@@ -9,6 +9,8 @@ import org.graphstream.graph.Graph;
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import RdmSeedNet.layerRd.typeNeighbourhood;
+
 public class layerSeed extends framework {
 	
 	private ArrayList<seed> seeds = new ArrayList<seed>();
@@ -41,7 +43,7 @@ public class layerSeed extends framework {
 	
 	public void initializationEachNode () {
 		for ( Node n : lNet.getGraph().getEachNode() ) {
-			double[] pos = GraphPosLengthUtils.nodePosition(n ) ;
+			double[] pos = GraphPosLengthUtils.nodePosition(n) ;
 			createSeed(pos[0], pos[1]);
 		}
 	}
@@ -51,14 +53,34 @@ public class layerSeed extends framework {
 		seeds.remove(s) ;
 	}
 	
+	public void removeSeed ( seed s , boolean removeSeedFromCell ) {
+		seeds.remove(s) ;
+		lRd.getCell(s).setHasSeed(false);
+	}
+	
+	public void removeSeed ( seed s , boolean removeSeedFromCell , layerRd.typeNeighbourhood typeNeighbourhood ) {
+		seeds.remove(s) ;
+		cell c = 	lRd.getCell(s) ;
+		c.setHasSeed(false);
+		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()))
+			ce.setHasSeed(false);
+	}
+	
 	// create one seed
 	public void createSeed ( double X , double Y ) {
 		seeds.add( new seed(X, Y, 0, 0 , null) ) ;
 	}
 	
-	public void createSeed ( double X , double Y , Node n ) {
+	public void createSeed ( double X , double Y , Node n  ) {
 		n.addAttribute("xyz", X , Y  , 0 );
 		seeds.add( new seed(X, Y, 0, 0 , n) ) ;
+	}
+
+	public void createSeed ( double X , double Y , Node n , boolean setSeedInCell ) {
+		n.addAttribute("xyz", X , Y  , 0 );
+		seed s = new seed(X, Y, 0, 0 , n)  ;
+		seeds.add(s) ;
+		lSeed.setSeedInCell(s, setSeedInCell , layerRd.typeNeighbourhood.moore);
 	}
 	
 	public void initializationSeedCircle ( int numNodes , double radius ) {
@@ -98,9 +120,7 @@ public class layerSeed extends framework {
 
 	}
 
-
-	public void initializationSeedCircle ( int numNodes , double radius , double centerX , double centerY) {
-		
+	public void initializationSeedCircle ( int numNodes , double radius , double centerX , double centerY) {		
  		Graph graph = lNet.getGraph() ;
 		double angle = 2 * Math.PI / numNodes ;		
 		int nodeCount = graph.getNodeCount() ;
@@ -139,6 +159,67 @@ public class layerSeed extends framework {
 		for ( Node n : graph.getEachNode()) 
 			bks.putNode(n);	
 	}
+	
+	public void initializationSeedCircleFeedBack ( int numNodes , double radius , double centerX , double centerY  ) {		
+ 		Graph graph = lNet.getGraph() ;
+		double angle = 2 * Math.PI / numNodes ;		
+		int nodeCount = graph.getNodeCount() ;
+		
+		Node old = null  ;
+		ArrayList<Node> listNodes = new ArrayList<Node>();
+		
+		for ( idNodeInt = nodeCount  ; idNodeInt <nodeCount + numNodes ; idNodeInt++ ) {
+			
+			double 	coordX = radius * Math.cos( idNodeInt * angle ) ,
+					coordY = radius * Math.sin( idNodeInt * angle ) ;
+					
+			idNode =  Integer.toString(idNodeInt) ;
+			graph.addNode(idNode) ;
+			Node n = graph.getNode(idNode);
+			
+			n.addAttribute("xyz", centerX + coordX ,  centerY + coordY , 0 );
+			listNodes.add(n);
+			lSeed.createSeed(centerX + coordX, centerY + coordY , n);
+			
+	
+			try {
+				idEdge = Integer.toString(idEdgeInt+1 );
+				Edge e = graph.addEdge(idEdge, n, old);
+				e.addAttribute("length", getDistGeom(n,old));
+				idEdgeInt++;
+			} catch (NullPointerException e)  {			//		e.printStackTrace();
+			
+			}
+			old = n ;
+		}	
+		idEdge = Integer.toString(idEdgeInt+1 );
+		Edge e = graph.addEdge(idEdge, old, listNodes.get(0));
+		e.addAttribute("length", getDistGeom(listNodes.get(0),old));
+		idEdgeInt++;
+		 
+		for ( seed s : lSeed.getListSeeds())
+			lSeed.setSeedInCell(s, true);
+		
+		for ( Node n : graph.getEachNode()) {
+			lNet.setNodeInCell(n, true);
+			bks.putNode(n);	
+		}
+	}
+	
+// FEEDBACK -----------------------------------------------------------------------------------------------------------------------------------------
+	public void setSeedInCell ( seed s , boolean hasSeed ) {
+		cell c = lRd.getCell(s);
+		c.setHasSeed(hasSeed);
+	}
+	
+	public void setSeedInCell ( seed s , boolean hasSeed , layerRd.typeNeighbourhood typeNeighbourhood ) {
+		cell c = lRd.getCell(s);
+		c.setHasSeed(hasSeed);
+		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
+		ce.setHasSeed(hasSeed);
+	}
+	
+
 	
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------	
 	public void updateLayer() {
@@ -274,8 +355,8 @@ public class layerSeed extends framework {
 		double 	vecX = val10 - val00 + val11 - val01 ,
 				vecY = val01- val00 + val11 - val10 ;
 		
-		vecX = checkValueVector2(vecX, .05) ;
-		vecY = checkValueVector2(vecY, .05) ;
+		vecX = checkValueVector2(vecX, .1 ) ;
+		vecY = checkValueVector2(vecY, .1 ) ;
 							
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
@@ -295,8 +376,8 @@ public class layerSeed extends framework {
 					continue ;
 				}
 			}
-		vecX = checkValueVector2(vecX, 1.0) ;
-		vecY = checkValueVector2(vecY, 1.0) ;
+		vecX = checkValueVector2(vecX, 0.1) ;
+		vecY = checkValueVector2(vecY, 0.1) ;
 		
 		s.setVec(-vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;

@@ -4,28 +4,33 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Random;
 
+import org.graphstream.graph.Graph;
+import org.graphstream.graph.Node;
+import org.graphstream.graph.implementations.SingleGraph;
+import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
+
 import RdmSeedNet_2.framework.morphogen;
 
 public class layerRd extends framework   {
 
 	private double sizeX, sizeY;
-	private int numCellX, numCellY;
+	private int numCellX, numCellY , idPointMaxLocInt  = 0 ;
+	private String idPointMaxLoc ;
 	private cell[][] cells ;
 	private ArrayList<cell> listMaxLocal = new ArrayList<cell>() ;
 	private morphogen m ;
+	private Graph graphMaxLoc = new SingleGraph ("maxLoc");
 	
-	private  double f ,  k ,  Da,  Db ;
-	public static enum RdmType { holes , solitions , movingSpots , pulsatingSolitions , mazes , U_SkateWorld , f055_k062 , chaos , spotsAndLoops , worms , waves }
-	private static RdmType type ;
-	private boolean computeMaxLocal ;
+	private  double f ,  k ,  Da,  Db , DaMax , DbMin ;
+	private boolean computeMaxLocal , vizMaxLocLayer ;
 	
 	public enum typeInitializationMaxLocal{ test , singlePoint , allPointActive}
-	private typeInitializationMaxLocal typeInitializationMaxLocal ;
-	public enum typeNeighbourhood { moore, vonNewmann , m_vn }
 	
+	public enum typeNeighbourhood { moore, vonNewmann , m_vn }	
 	public enum typeDiffusion { mooreCost, mooreWeigthed , vonNewmannCost }
-	private typeDiffusion typeDiffusion ;
 	
+	private typeDiffusion typeDiffusion ;
+	private typeInitializationMaxLocal typeInitializationMaxLocal ;
 	public layerRd ( ) {
 		this(0,0,0,0,false);	
 	}
@@ -58,29 +63,34 @@ public class layerRd extends framework   {
 			}	
 	}	
 	
-// compute max local --------------------------------------------------------------------------------------------------------------------------------
-	
-	public void setInitMaxLocal ( typeInitializationMaxLocal typeInitializationMaxLocal,  morphogen m  ) {
+// compute max local --------------------------------------------------------------------------------------------------------------------------------	
+	public void setInitMaxLocal ( typeInitializationMaxLocal typeInitializationMaxLocal,  morphogen m , boolean vizMaxLocLayer   ) {
 		this.typeInitializationMaxLocal = typeInitializationMaxLocal  ;
 		this.m = m ;
+		this.vizMaxLocLayer = vizMaxLocLayer ;		
 	}
 	
-	private void initializeMaxLocal ( int posX , int posY  ) {	
-				listMaxLocal.add(cells[posX][posY]);
-				cells[posX][posY].setMaxLocal(true);		
+	private void initializeMaxLocal ( int posX , int posY ) {		
+		listMaxLocal.add(cells[posX][posY]);
+		cells[posX][posY].setMaxLocal(true);			
+		if ( vizMaxLocLayer ) {	
+			idPointMaxLoc = Integer.toString(idPointMaxLocInt++)  ;
+			graphMaxLoc.addNode( idPointMaxLoc ) ; 
+			Node n = graphMaxLoc.getNode(idPointMaxLoc) ;
+			n.addAttribute("xyz", posX ,posY, 0);
+		}
 	}
 	
-	public void computeMaxLocal ( ) {
-		
-		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ;
-		ArrayList<cell>  listCellToRemove = new ArrayList<cell>() ;
+	public void computeMaxLocal ( ) {	
+		ArrayList<cell>  listCellToAdd = new ArrayList<cell>() ,
+				listCellToRemove = new ArrayList<cell>() ;
 		for ( cell cellMax : listMaxLocal ) {
 			ArrayList<cell> listNeig = getListNeighbors(typeNeighbourhood.vonNewmann, cellMax.getX(), cellMax.getY()) ;
-		//	listNeig.add(cellMax);
+			listNeig.add(cellMax);
 			for ( cell c : listNeig ) {
 				int posX = c.getX(), posY = c.getY();
 				double val = getValMorp(c, m, false);
-				if ( ! listCellToAdd.contains(c) && ! listMaxLocal.contains(c) ) 
+				if (  ! listCellToAdd.contains(c) && ! listCellToRemove.contains(c) && ! listMaxLocal.contains(c) ) 
 					if ( val > getValMorp(getCell(posX+1, posY), m, true) && val > getValMorp(getCell(posX-1, posY), m, true)) 
 						if ( val > getValMorp(getCell(posX, posY+1), m, true) && val > getValMorp(getCell(posX, posY-1), m, true)) {
 							listCellToAdd.add(c);
@@ -88,10 +98,8 @@ public class layerRd extends framework   {
 						}
 			}
 		}
-		
 		listCellToAdd.stream().forEach(c -> addMaxLocal(c));
 		listCellToRemove.stream().forEach(c -> removeMaxLocal(c));
-
 	}
 	
 	protected void addMaxLocal (cell c) {
@@ -103,8 +111,15 @@ public class layerRd extends framework   {
 		listMaxLocal.remove(c);
 		cells[c.getX()][c.getY()].setMaxLocal(false);			
 	}
+
+// FEEDBACK -----------------------------------------------------------------------------------------------------------------------------------------
+	public void setFeedBackParameters ( double DaMax , double DbMin ) {
+		this.DaMax = DaMax ;
+		this.DbMin = DbMin ;
+	}
 	
 	
+
 // RULES --------------------------------------------------------------------------------------------------------------------------------------------	
 	// Gray Scott classic model 
 		
@@ -137,7 +152,7 @@ public class layerRd extends framework   {
 	
 	// update cells 
 	public void updateLayer (  ) {
-			
+		
 		for ( cell c : listCell ) {
 			double 	valA = getValMorp(c, morphogen.a, false),
 					valB = getValMorp(c, morphogen.b, false);
@@ -145,8 +160,21 @@ public class layerRd extends framework   {
 			morphogen a = morphogen.a ;
 			morphogen b = morphogen.b ;
 			
-			double 	diffA = getCoefDiff(a) * getDiffusion(typeDiffusion, c, a) ,
-					diffB = getCoefDiff(b) * getDiffusion(typeDiffusion, c, b) ,
+			
+				
+			double coefDiffA , coefDiffB;
+			
+			if ( isFeedBackModel ) {
+				coefDiffA = getCoeffDiffusionFeedback(a, c) ; 
+				coefDiffB = getCoeffDiffusionFeedback(b, c);
+			}
+			else {
+				coefDiffA = getCoefDiff(a) ; 
+				coefDiffB =  getCoefDiff(b);
+			}
+			
+			double 	diffA = coefDiffA * getDiffusion(typeDiffusion, c, a) ,
+					diffB = coefDiffB * getDiffusion(typeDiffusion, c, b) ,
 			
 					react = valA * valB * valB ,
 			
@@ -157,7 +185,6 @@ public class layerRd extends framework   {
 					newValB =  valB + diffB + react - extB;
 			c.setVals(newValA, newValB);
 		}
-	
 	}
 	
 	// get Fick's diffusion 
@@ -296,8 +323,21 @@ public class layerRd extends framework   {
 			return Db;
 	}
 	
-	
-	
+	// get coefficient diffusion for feedback model 
+	private double getCoeffDiffusionFeedback (morphogen m , cell c ) {
+		if ( m.equals(morphogen.a))
+			if ( c.hasSeed() )
+				return DaMax;
+			else 
+				return Da;
+		else {
+			if ( c.hasNode() )
+				return DbMin ;
+			else
+				return Db ;		
+		}					
+	}
+			
 // GET NEIGHBORS ------------------------------------------------------------------------------------------------------------------------------------	 
 	protected ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
 		ArrayList<cell> list = new  ArrayList<cell> ();		
@@ -363,6 +403,18 @@ public class layerRd extends framework   {
 		return  cells[X][Y]; 
 	}
 	
+	public cell getCell ( double[] coords) {
+		return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
+	}
+	
+	public cell getCell ( Node n ) {
+		double[] coords = GraphPosLengthUtils.nodePosition(n);	
+		return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
+	}
+	public cell getCell ( seed s ) {
+		return cells[(int) Math.floor(s.getX() )][(int) Math.floor(s.getY() )] ;
+	}
+		
 	public double getFeed ( ) {
 		return f;
 	}
