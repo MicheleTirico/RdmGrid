@@ -29,7 +29,7 @@ public class runAndViz extends framework {
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
-		lRd = new layerRd(1, 1, 200, 200, true);		
+		lRd = new layerRd(1, 1, 200, 200, true ,typeRadius.square);		
 		lRd.initializeCostVal(1,0);	
 		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b, false);
 			

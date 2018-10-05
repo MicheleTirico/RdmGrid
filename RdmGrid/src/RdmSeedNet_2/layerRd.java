@@ -2,6 +2,8 @@ package RdmSeedNet_2;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 import org.graphstream.graph.Graph;
@@ -21,7 +23,14 @@ public class layerRd extends framework   {
 	private morphogen m ;
 	private Graph graphMaxLoc = new SingleGraph ("maxLoc");
 	
-	private  double f ,  k ,  Da,  Db , DaMax , DbMin ;
+	private ArrayList <int[]> listCoordsMaxLoc = new ArrayList<int[]>();
+	private ArrayList <cell> listCellMaxLoc = new ArrayList<cell>();
+	private  double f ,  k ,  Da,  Db ;
+	
+	// feedback parameters
+	private double DaMax , DbMin ;
+	private double  DaN ,  DaS , DaNS , DbN ,  DbS , DbNS ;
+	
 	private boolean computeMaxLocal , vizMaxLocLayer ;
 	
 	public enum typeInitializationMaxLocal{ test , singlePoint , allPointActive}
@@ -32,15 +41,16 @@ public class layerRd extends framework   {
 	private typeDiffusion typeDiffusion ;
 	private typeInitializationMaxLocal typeInitializationMaxLocal ;
 	public layerRd ( ) {
-		this(0,0,0,0,false);	
+		this(0,0,0,0,false , null );	
 	}
 
-	public layerRd(double sizeX, double sizeY , int numCellX, int numCellY , boolean computeMaxLocal) {
+	public layerRd(double sizeX, double sizeY , int numCellX, int numCellY , boolean computeMaxLocal  , typeRadius   typeRadius  ) {
 		this.sizeX = sizeX ;
 		this.sizeY = sizeY ;
 		this.numCellX = numCellX ;
 		this.numCellY = numCellY ;
 		this.computeMaxLocal = computeMaxLocal ;
+		this.typeRadius  =  typeRadius ;
 		cells = new cell[numCellX][numCellY];
 	}
 
@@ -48,7 +58,7 @@ public class layerRd extends framework   {
 	public void initializeCostVal ( double val1 , double val2 ) {
 		for (int x = 0; x<numCellX; x++)
 			for (int y = 0; y<numCellY; y++) {
-				cell c = new cell(x,y,val1, val2, false);
+				cell c = new cell(x,y,val1, val2, false , false , false);
 				cells[x][y] = c ;
 				putCellInList(c);			
 			}
@@ -57,7 +67,7 @@ public class layerRd extends framework   {
 	public void initializeRandomVal ( int seedRd1, int seedRd2, double minVal1, double minVal2 , double maxVal1 , double maxVal2) {
 		for (int x = 0; x<numCellX; x++)
 			for (int y = 0; y<numCellY; y++) {
-				cell c = new cell(x,y,getValRd(seedRd1, minVal1, maxVal1), getValRd(seedRd2, minVal2, maxVal2), false);
+				cell c = new cell(x,y,getValRd(seedRd1, minVal1, maxVal1), getValRd(seedRd2, minVal2, maxVal2), false , false , false);
 				cells[x][y] = c ;
 				putCellInList(c);			
 			}	
@@ -72,12 +82,11 @@ public class layerRd extends framework   {
 	
 	private void initializeMaxLocal ( int posX , int posY ) {		
 		listMaxLocal.add(cells[posX][posY]);
-		cells[posX][posY].setMaxLocal(true);			
-		if ( vizMaxLocLayer ) {	
-			idPointMaxLoc = Integer.toString(idPointMaxLocInt++)  ;
-			graphMaxLoc.addNode( idPointMaxLoc ) ; 
-			Node n = graphMaxLoc.getNode(idPointMaxLoc) ;
-			n.addAttribute("xyz", posX ,posY, 0);
+		cell c = cells[posX][posY] ;
+		c.setMaxLocal(true);	
+		if ( vizMaxLocLayer ) {
+			listCellMaxLoc.add(c);
+			listCoordsMaxLoc.add(new int[] { posX, posY });
 		}
 	}
 	
@@ -98,8 +107,26 @@ public class layerRd extends framework   {
 						}
 			}
 		}
-		listCellToAdd.stream().forEach(c -> addMaxLocal(c));
-		listCellToRemove.stream().forEach(c -> removeMaxLocal(c));
+		listCellToAdd.stream().forEach(c -> addMaxLocal(c, vizMaxLocLayer));
+		listCellToRemove.stream().forEach(c -> removeMaxLocal(c,vizMaxLocLayer));
+		
+		if ( vizMaxLocLayer) {	
+			for ( Node n : graphMaxLoc.getEachNode()) {
+				try {
+					 n.getAttribute("viz");
+				} catch (NullPointerException e) {
+					continue ;
+				}
+				graphMaxLoc.removeNode(n);
+			}
+			
+			for ( cell c : listMaxLocal) {		
+				idPointMaxLoc = Integer.toString(idPointMaxLocInt++);
+				Node n = graphMaxLoc.addNode(idPointMaxLoc);
+				n.addAttribute("xyz", c.getX(), c.getY() , 0);
+				
+			}
+		}
 	}
 	
 	protected void addMaxLocal (cell c) {
@@ -107,9 +134,29 @@ public class layerRd extends framework   {
 		cells[c.getX()][c.getY()].setMaxLocal(true);		
 	}
 	
-	protected void removeMaxLocal (cell c) {
+	protected void addMaxLocal (cell c , boolean vizMaxLocLayer ) {
+		listMaxLocal.add(c);
+		int posX = c.getX(), 
+				posY = c.getY();
+		cells[posX][posY].setMaxLocal(true);		
+		if ( vizMaxLocLayer) {	
+			listCellMaxLoc.add(c);
+		}
+	}
+	
+	protected void removeMaxLocal (cell c ) {
 		listMaxLocal.remove(c);
-		cells[c.getX()][c.getY()].setMaxLocal(false);			
+		cells[c.getX()][c.getY()].setMaxLocal(false);				
+	}
+	
+	protected void removeMaxLocal (cell c , boolean vizMaxLocLayer ) {
+		listMaxLocal.remove(c);
+		int posX = c.getX(), 
+				posY = c.getY();
+		cells[posX][posY].setMaxLocal(false);			
+		if ( vizMaxLocLayer) {
+			listCellMaxLoc.remove(c);
+		}
 	}
 
 // FEEDBACK -----------------------------------------------------------------------------------------------------------------------------------------
@@ -117,6 +164,16 @@ public class layerRd extends framework   {
 		this.DaMax = DaMax ;
 		this.DbMin = DbMin ;
 	}
+	
+	public void setFeedBackParameters ( double DaN , double DaS ,double DaNS ,double DbN , double DbS ,double DbNS ) {
+		this.DaN = DaN ;
+		this.DaS = DaS ;
+		this.DaNS = DaNS ; 
+		this.DbN = DbN ;
+		this.DbS = DbS ;
+		this.DbNS = DbNS ;	
+	}
+	
 	
 	
 
@@ -159,20 +216,27 @@ public class layerRd extends framework   {
 			
 			morphogen a = morphogen.a ;
 			morphogen b = morphogen.b ;
-			
-			
 				
-			double coefDiffA , coefDiffB;
+			double coefDiffA = 0 , coefDiffB = 0;
 			
-			if ( isFeedBackModel ) {
-				coefDiffA = getCoeffDiffusionFeedback(a, c) ; 
-				coefDiffB = getCoeffDiffusionFeedback(b, c);
+			if ( isFeedBackModel ) { // booleanSingleImpact , booleanCombinedImpact
+				switch (typeFeedbackModel) {
+				case booleanSingleImpact:
+					coefDiffA = getCoeffDifSinImp (a, c) ; 
+					coefDiffB = getCoeffDifSinImp (b, c);
+					break;
+				case booleanCombinedImpact :
+					coefDiffA = getCoeffDifCombImp (a, c) ; 
+					coefDiffB = getCoeffDifCombImp (b, c);
+				}
+				
 			}
 			else {
 				coefDiffA = getCoefDiff(a) ; 
-				coefDiffB =  getCoefDiff(b);
+				coefDiffB = getCoefDiff(b);
 			}
 			
+//			if ( coefDiffB != 0.1 )	System.out.println("da " + coefDiffA + " db " + coefDiffB);
 			double 	diffA = coefDiffA * getDiffusion(typeDiffusion, c, a) ,
 					diffB = coefDiffB * getDiffusion(typeDiffusion, c, b) ,
 			
@@ -219,7 +283,6 @@ public class layerRd extends framework   {
 				ArrayList<cell> listNeigS = new ArrayList<cell>(getListNeighbors(typeNeighbourhood.vonNewmann, c.getX(), c.getY()));
 				ArrayList<cell> listNeigC = new ArrayList<cell>(getListNeighbors(typeNeighbourhood.m_vn, c.getX(), c.getY()));
 				
-		//		System.out.println(listNeigS);
 				for ( cell neigS : listNeigS ) 
 					valNeigS = valNeigS + getValMorp(neigS, m, false);
 
@@ -293,6 +356,11 @@ public class layerRd extends framework   {
 	protected int getNumberCellMaxLocal () {
 		return listMaxLocal.size();
 	}
+
+	protected Graph getGraph ( ) {
+		return graphMaxLoc ;
+	}
+	
 // private methods ----------------------------------------------------------------------------------------------------------------------------------
 	private double getValRd ( int seedRd, double minRd , double maxRd ) {
 		Random rd = new Random( seedRd );
@@ -324,7 +392,7 @@ public class layerRd extends framework   {
 	}
 	
 	// get coefficient diffusion for feedback model 
-	private double getCoeffDiffusionFeedback (morphogen m , cell c ) {
+	private double getCoeffDifSinImp (morphogen m , cell c ) {
 		if ( m.equals(morphogen.a))
 			if ( c.hasSeed() )
 				return DaMax;
@@ -338,6 +406,29 @@ public class layerRd extends framework   {
 		}					
 	}
 			
+	
+	private double getCoeffDifCombImp  ( morphogen m , cell c ) {
+		
+		if ( m.equals(morphogen.a)) {		
+			if ( c.hasSeed() && c.hasNode())
+				return DaNS;
+			else if  ( c.hasSeed() && ! c.hasNode() )
+				return DaS;
+			else if  ( ! c.hasSeed() &&  c.hasNode() )
+				return DaN ;
+			else
+				return Da ;			
+		} else {
+			if ( c.hasSeed() && c.hasNode())
+				return DbNS;
+			else if  ( c.hasSeed() && ! c.hasNode() )
+				return DbS;
+			else if  ( ! c.hasSeed() &&  c.hasNode() )
+				return DbN ;
+			else
+				return Db ;			
+		}
+	}
 // GET NEIGHBORS ------------------------------------------------------------------------------------------------------------------------------------	 
 	protected ArrayList<cell> getListNeighbors ( typeNeighbourhood typeNeighbourhood , int cellX , int cellY ) {
 		ArrayList<cell> list = new  ArrayList<cell> ();		
@@ -399,18 +490,23 @@ public class layerRd extends framework   {
 	}
 	
 	public cell getCell (int X , int Y) {
-	//	System.out.println(X+ "  " + Y);
 		return  cells[X][Y]; 
 	}
 	
 	public cell getCell ( double[] coords) {
-		return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
-	}
+		try {
+			return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
+		} catch (ArrayIndexOutOfBoundsException e) {
+			e.printStackTrace();
+			return null ;
+		}
+		}
 	
 	public cell getCell ( Node n ) {
 		double[] coords = GraphPosLengthUtils.nodePosition(n);	
 		return cells[(int) Math.floor(coords[0])][(int) Math.floor(coords[1])] ;
 	}
+
 	public cell getCell ( seed s ) {
 		return cells[(int) Math.floor(s.getX() )][(int) Math.floor(s.getY() )] ;
 	}
@@ -422,4 +518,7 @@ public class layerRd extends framework   {
 	public double getKill ( ) {
 		return k;
 	}
+	
+	
 }
+

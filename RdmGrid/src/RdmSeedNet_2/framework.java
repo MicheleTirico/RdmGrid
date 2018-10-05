@@ -10,6 +10,9 @@ import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 public abstract class framework  {
 	
 	protected static boolean isFeedBackModel;
+	protected enum typeFeedbackModel { booleanSingleImpact , booleanCombinedImpact }
+	protected static typeFeedbackModel  typeFeedbackModel  ;
+	
 	protected static layerSeed lSeed = new layerSeed();
 	protected static layerRd lRd = new layerRd();
 	protected static layerNet lNet = new layerNet() ;
@@ -21,6 +24,8 @@ public abstract class framework  {
 	protected static String idEdge;
 	protected static double  f , k  ;
 	
+	public enum typeRadius { square , circle}
+	protected static typeRadius typeRadius;
 	protected static ArrayList<cell> listCell = new ArrayList<cell> ();
 	protected static ArrayList<bucket> listBucket = new ArrayList<bucket>();
 	
@@ -80,8 +85,9 @@ public abstract class framework  {
 		}
 	}
 	
-	public static void isFeedBackModel ( boolean isFeed ) {
-		isFeedBackModel = isFeed ;
+	public static void isFeedBackModel ( boolean isFbM , typeFeedbackModel  type ) {
+		isFeedBackModel = isFbM ;
+		typeFeedbackModel  = type  ; 
 	}
 	
 	

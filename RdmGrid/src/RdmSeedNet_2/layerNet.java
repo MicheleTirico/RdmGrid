@@ -22,6 +22,7 @@ import org.graphstream.graph.Path;
 import org.graphstream.graph.implementations.SingleGraph;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import RdmGsaNet_setupLayer.setupNetFistfulNodes.typeRadius;
 import RdmSeedNet.layerRd.typeNeighbourhood;
 
 
@@ -35,6 +36,7 @@ public class layerNet extends framework {
 	private static typeSetupLayer typeSetupLayer ;
 	
 	private Graph graph = new SingleGraph ( "net" );
+
 	public layerNet () {
 		this( null ) ;
 	}
@@ -79,7 +81,7 @@ public class layerNet extends framework {
 		Node nodeF = graph.getNode(idNode ) ;
 		
 		// compute vector
-		double[] vec = lSeed.getVector(s , typeVectorField );	
+		double[] vec = lSeed.getVector(s , typeVectorField , typeRadius );	
 		s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
 		
 		// set coordinates of new node
@@ -119,7 +121,7 @@ public class layerNet extends framework {
 			Node nodeF = graph.getNode(idNode ) ;
 			
 			// compute vector
-			double[] vec = lSeed.getVector(s , typeVectorField );	
+			double[] vec = lSeed.getVector(s , typeVectorField , typeRadius  );	
 			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
 			
 			// set coordinates of new node
@@ -153,7 +155,7 @@ public class layerNet extends framework {
 		Node nodeF = null , nodeS = null ;
 		// get old node
 		nodeS = s.getNode();			
-		double[] 	vec = lSeed.getVector(s , typeVectorField ) ;
+		double[] 	vec = lSeed.getVector(s , typeVectorField , typeRadius   ) ;
 		
 		if ( s.getIntenVec() > 0.001 ) {
 			
@@ -219,7 +221,7 @@ public class layerNet extends framework {
 	listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));
 }
 	
-	public void updateLayers_04 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed  ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+	public void updateLayers_04 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
 		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
@@ -229,6 +231,9 @@ public class layerNet extends framework {
 			createSeed_03(minDistSeed);
 		
 		for ( seed s : lSeed.getListSeeds() ) {
+			
+			lSeed.setSeedInCell(s, false);
+			
 			Node nodeS , nodeF ;
 			// get old node
 			nodeS = s.getNode();	
@@ -238,11 +243,13 @@ public class layerNet extends framework {
 			graph.addNode( idNode ) ; 
 			nodeF = graph.getNode(idNode ) ;
 			if ( isFeedBackModel)
-				lNet.setNodeInCell(nodeF, true , layerRd.typeNeighbourhood.moore);
+				lNet.setNodeInCell(nodeF, true );
 			
 			// compute vector
-			double[] vec = lSeed.getVector(s , typeVectorField );	
+			double[] vec = lSeed.getVector(s , typeVectorField, typeRadius );	
+			
 			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+			lSeed.setSeedInCell(s, true);
 			
 			// set coordinates of new node
 			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
@@ -250,7 +257,7 @@ public class layerNet extends framework {
 			// create edge
 			idEdge = Integer.toString(idEdgeInt+1 );
 			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-			e.addAttribute("length", getDistGeom(nodeS,nodeF));
+			e.addAttribute("length", getDistGeom(nodeS,nodeF)); 
 			
 			// link seed to node
 			s.setNode(nodeF);
@@ -290,8 +297,7 @@ public class layerNet extends framework {
 		if ( isFeedBackModel )
 			listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s , true ));
 		else 
-			listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));
-		
+			listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));		
 	}
 	
 	//create seed with remove cell 
@@ -386,7 +392,7 @@ public class layerNet extends framework {
 		nodeF = graph.getNode(idNode ) ;
 		
 		// compute vector
-		double[] vec = lSeed.getVector(s , typeVectorField );	
+		double[] vec = lSeed.getVector(s , typeVectorField , typeRadius   );	
 		s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
 		
 		// set coordinates of new node
@@ -409,7 +415,7 @@ public class layerNet extends framework {
 	private void handleNewNode_02 (Node nodeF , Node nodeS , seed s , typeVectorField typeVectorField ) {
 		// get old node
 		nodeS = s.getNode();			
-		double[] 	vec = lSeed.getVector(s , typeVectorField ) ;
+		double[] 	vec = lSeed.getVector(s , typeVectorField , typeRadius   ) ;
 		
 		if ( s.getIntenVec() > 0.001 ) {
 			
@@ -694,13 +700,13 @@ public class layerNet extends framework {
 		c.setHasNode(hasNode);
 	}
 	
-	public void setNodeInCell ( Node n , boolean hasNode , layerRd.typeNeighbourhood typeNeighbourhood ) {
-		cell c = lRd.getCell(n);
-		c.setHasNode(hasNode);
-		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
-			ce.setHasNode(hasNode);
-	}
-	
+//	public void setNodeInCell ( Node n , boolean hasNode , layerRd.typeNeighbourhood typeNeighbourhood ) {
+//		cell c = lRd.getCell(n);
+//		c.setHasNode(hasNode);
+//		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
+//			ce.setHasNode(hasNode);
+//	}
+//	
 	
 	
 // GET EDGES ----------------------------------------------------------------------------------------------------------------------------------------

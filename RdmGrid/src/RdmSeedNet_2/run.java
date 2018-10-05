@@ -25,59 +25,98 @@ import RdmSeedNet_2.layerRd.typeInitializationMaxLocal;
 
 public class run extends framework {
 
-	static double Da = 0.15, Db = 0.15 ;	
+	static double Da = 0.6 , Db = 0.2 ;	
 	static double g = 1, alfa = 2 , Ds = .01	, r = 1 ;
-	private static Viewer viewer ;
+	private static Viewer viewerNet , viewerLocMax ;
 	
 	public static void main(String[] args) {		
 		
-		isFeedBackModel(true);
+		isFeedBackModel(true , typeFeedbackModel.booleanCombinedImpact);
 		
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
-		lRd = new layerRd(1, 1, 200, 200, true);		
+		lRd = new layerRd(1, 1, 200, 200, true, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b, false);
+		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b, true);
 			
-		setRdType ( RdmType.movingSpots ) ;	//	System.out.println(f + " " + k);
-		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed );
-		lRd.setFeedBackParameters(0.3, 0.1);
+		setRdType ( RdmType.pulsatingSolitions ) ;	//	System.out.println(f + " " + k);
+		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
 		
+		double eps = - 0.15;
+		lRd.setFeedBackParameters(0.3 , 0.3 );
+		lRd.setFeedBackParameters(Da + eps, Da - eps, Da  , Db- eps, Db + eps, Db );
+
 		lNet = new layerNet("net") ;
 		Graph netGraph = lNet.getGraph();
-	
+		Graph graphLoc = lRd.getGraph() ;
+		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 
-		initMultiCircle(1, 1, 40 , 100 ,100 , 2 , 4 );
+		initMultiCircle(1, 1, 50 , 120 ,120 , 2 , 5 );		
+		initMultiCircle(1, 1, 50 , 120 ,80 , 2 , 3 );
+		initMultiCircle(1, 1, 50 , 80 ,120 , 3 , 5 );		
+		initMultiCircle(1, 1, 50 , 80 ,80 , 3 , 3 );	
+		
 		lNet.setLengthEdges("length" , true );
 
-		// set file Source for file step
-		viewer = netGraph.display(false);	
-
+		// set file Source for file step		
+		viewerLocMax = graphLoc.display(false);
+		viewerNet = netGraph.display(false);	
+		
 		// setup viz netGraph
 		handleVizStype netViz = new handleVizStype( netGraph ,stylesheet.manual , "seed", 1) ;
 		netViz.setupIdViz(false , netGraph, 20 , "black");
 		netViz.setupDefaultParam (netGraph, "black", "black", 1 , 0.5 );
 		netViz.setupVizBooleanAtr(true, netGraph, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( false , netGraph, 200 , 0);
-	
-		// only for viz
-		for ( seed s : lSeed.getListSeeds()) 	
-			s.getNode().setAttribute("seed", 1);	
+		netViz.setupFixScaleManual( true , netGraph, 200 , 0);
+		
+		// setup viz max Loc Graph
+		handleVizStype maxLocViz = new handleVizStype( graphLoc ,stylesheet.booleanAtr , "seed", 1) ;
+		maxLocViz.setupDefaultParam (graphLoc, "black", "black", 6 , 0.5 );
+		maxLocViz.setupVizBooleanAtr(true, graphLoc, "black", "red" , false , false ) ;
 		
 		int t = 0 ;
 		while ( t < 5000 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("------------- step " +t);
+			maxLocViz.setupFixScaleManual( false , graphLoc, 200 , 0);
+			
 			lRd.updateLayer();
 			lRd.computeMaxLocal();
-			lNet.updateLayers_04(typeVectorField.slopeDistanceRadius , 4 , false , 1 );
+			lNet.updateLayers_04(typeVectorField.slopeDistanceRadius , 2 , true , 5 );
 		//	Thread.sleep(1);
 			t++;
-	
 		}
-	}
+		
 	
+		
+		// only for viz
+		for ( seed s : lSeed.getListSeeds()) 	
+			s.getNode().setAttribute("seed", 1);	
+	
+		/*
+		for ( seed s : lSeed.getListSeeds()) {
+			System.out.println (s.getX() + " " + s.getY());
+			cell c = lRd.getCell(s);
+		//	System.out.println(c.getX() + " " + c.getY());
+//			if ( c.hasSeed() )
+//				System.out.println("hasSeed " + c.hasSeed());
+			if ( c.hasNode() )
+				System.out.println("hasNode " + c.hasNode() ) ;
+		}
+		
+		for ( Node n : netGraph.getEachNode()) {
+			double [] position = GraphPosLengthUtils.nodePosition(n);
+			try {
+				cell c = lRd.getCell(position);
+				if ( c.hasNode() )
+					System.out.println(c.getX() + " " + c.getY() + " hasNode " + c.hasNode() ) ;
+			} catch (NullPointerException e) {
+				// TODO: handle exception
+			}
+		}
+	*/
+	}
 
 	
 		

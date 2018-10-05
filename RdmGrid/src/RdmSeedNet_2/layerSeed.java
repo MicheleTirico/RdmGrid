@@ -18,13 +18,14 @@ public class layerSeed extends framework {
 	private morphogen m ;
 	
 	public enum typeInitializationSeed {centerCellThMorp, test }
+
 	private static typeInitializationSeed typeInitializationSeed ;
 	
 	public layerSeed () {
 		this(0,0,0,0, null);	
 	}
 
-	public layerSeed( double g , double alfa , double Ds, double r , morphogen m) {
+	public layerSeed( double g , double alfa , double Ds, double r , morphogen m ) {
 		this.g = g;
 		this.alfa = alfa ;
 		this.Ds = Ds ;
@@ -78,9 +79,9 @@ public class layerSeed extends framework {
 
 	public void createSeed ( double X , double Y , Node n , boolean setSeedInCell ) {
 		n.addAttribute("xyz", X , Y  , 0 );
-		seed s = new seed(X, Y, 0, 0 , n)  ;
+		seed s = new seed(X, Y, 0, 0 , n )  ;
 		seeds.add(s) ;
-		lSeed.setSeedInCell(s, setSeedInCell , layerRd.typeNeighbourhood.moore);
+		lSeed.setSeedInCell(s, setSeedInCell);
 	}
 	
 	public void initializationSeedCircle ( int numNodes , double radius ) {
@@ -207,20 +208,18 @@ public class layerSeed extends framework {
 	}
 	
 // FEEDBACK -----------------------------------------------------------------------------------------------------------------------------------------
-	public void setSeedInCell ( seed s , boolean hasSeed ) {
+	public void setSeedInCell ( seed s , boolean setSeedInCell ) {
 		cell c = lRd.getCell(s);
-		c.setHasSeed(hasSeed);
+		c.setHasSeed(setSeedInCell);
 	}
 	
-	public void setSeedInCell ( seed s , boolean hasSeed , layerRd.typeNeighbourhood typeNeighbourhood ) {
-		cell c = lRd.getCell(s);
-		c.setHasSeed(hasSeed);
-		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
-		ce.setHasSeed(hasSeed);
-	}
-	
-
-	
+//	public void setSeedInCell ( seed s , boolean setSeedInCell , layerRd.typeNeighbourhood typeNeighbourhood ) {
+//		cell c = lRd.getCell(s);
+//		c.setHasSeed(setSeedInCell);
+//		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
+//			ce.setHasSeed(setSeedInCell);
+//	}
+		
 // UPDATE LAYER SEED --------------------------------------------------------------------------------------------------------------------------------	
 	public void updateLayer() {
 		for (seed s : seeds) {
@@ -245,31 +244,31 @@ public class layerSeed extends framework {
 		}
 	}
 
-	protected double[] getVector (seed s , typeVectorField typeVectorField ) {
+	protected double[] getVector (seed s , typeVectorField typeVectorField  , typeRadius typeRadius) {
 		
 		double[] vector = new double[2];
 		switch ( typeVectorField) {
 			case gravity:
-				vector = getVectorGravity(s);
+				vector = getVectorGravity(s,typeRadius);
 				break;
 			case slope :
-				vector = getVectorSlope(s);
+				vector = getVectorSlope(s,typeRadius);
 				break;
 			case slopeDistance :
-				vector = getVectorSlopeDistance(s);
+				vector = getVectorSlopeDistance(s,typeRadius);
 				break;
 			case slopeRadius :
-				vector = getVectorSlopeRadius(s);
+				vector = getVectorSlopeRadius(s,typeRadius);
 				break;
 			case slopeDistanceRadius :
-				vector = getVectorSlopeDistanceRadius(s);
+				vector = getVectorSlopeDistanceRadius(s,typeRadius);
 				break;
 		}
 		return vector ;
 	}
 	
 	// get vector slope distance
-	private double[] getVectorSlopeDistance ( seed s ) {
+	private double[] getVectorSlopeDistance ( seed s,typeRadius typeRadius ) {
 		double sX = s.getX() , sY = s.getY() ;
 
 		cell 	c00 = lRd.getCell( (int) Math.floor(sX),(int) Math.floor(sY)), 
@@ -299,10 +298,16 @@ public class layerSeed extends framework {
 	}
 		
 	// get vector slope radius
-	private double[] getVectorSlopeRadius ( seed s ) {
+	private double[] getVectorSlopeRadius ( seed s ,typeRadius typeRadius) {
 		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0 ;
 		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
 			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {		
+				
+				cell c = lRd.getCell(x,y);
+				if ( typeRadius.equals(typeRadius.circle)) 
+					if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
+						continue ;
+				
 				double 	addVecX = lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) , 
 						addVecY = lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ;
 					
@@ -317,10 +322,15 @@ public class layerSeed extends framework {
 	}
 	
 	// get vector slope distance radius
-	private double[] getVectorSlopeDistanceRadius ( seed s ) {
+	private double[] getVectorSlopeDistanceRadius ( seed s ,typeRadius typeRadius) {
 		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0 ;
 		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
-			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {		
+			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {	
+				
+				cell c = lRd.getCell(x,y);
+				if ( typeRadius.equals(typeRadius.circle)) 
+					if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
+						continue ;
 			
 				double 	distX = Math.pow(1+Math.abs(sY - y), 2) ,
 						distY = Math.pow(1+Math.abs(sX - x), 2); 
@@ -329,7 +339,10 @@ public class layerSeed extends framework {
 						addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
 				
 				vecX = vecX + addVecX ;
-				vecY = vecY + addVecY ;			
+				vecY = vecY + addVecY ;		
+				
+				if ( Double.isNaN(vecX))			vecX = 0 ;
+				if ( Double.isNaN(vecY))			vecY = 0 ;
 			}
 		vecX = checkValueVector2(vecX, .10) ;
 		vecY = checkValueVector2(vecY, .10) ;
@@ -339,7 +352,7 @@ public class layerSeed extends framework {
 	}
 		
 	// get vector slope
-	private double[] getVectorSlope ( seed s ) {
+	private double[] getVectorSlope ( seed s ,typeRadius typeRadius) {
 		double sX = s.getX() , sY = s.getY() ;
 
 		cell 	c00 = lRd.getCell( (int) Math.floor(sX),(int) Math.floor(sY)), 
@@ -363,12 +376,16 @@ public class layerSeed extends framework {
 	}
 	
 	//get vector gravity
-	private double[] getVectorGravity ( seed s ) {
+	private double[] getVectorGravity ( seed s ,typeRadius typeRadius) {
 		double vecX = 0 , vecY = 0;
 		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
 			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {
 				try {
 					cell c = lRd.getCell(x,y);
+					if ( typeRadius.equals(typeRadius.circle)) 
+						if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
+							continue ;
+						
 					double val = lRd.getValMorp(c, m, true) ;
 					vecX = vecX + ceckPositionVectorGravity(c.getX(),s.getX(),val) ;
 					vecY = vecY + ceckPositionVectorGravity(c.getY(),s.getY(),val) ;
