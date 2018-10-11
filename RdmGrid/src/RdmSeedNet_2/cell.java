@@ -3,7 +3,7 @@ package RdmSeedNet_2;
 import java.util.ArrayList;
 import java.util.Arrays;
 
-class cell{
+class cell extends framework {
     private int X;
     private int Y;
     private double val1,val2 ;
@@ -47,6 +47,13 @@ class cell{
     public double getVal2() {
     	return val2;
     }
+    
+//    public double getVal ( morphogen m ) {
+//    	if ( m.equals(morphogen.a))
+//    		return getVal1();
+//    	else
+//    		return getVal2() ;
+//    }
     
     public boolean isMaxLocal ( ) {
     	return isMaxLocal;

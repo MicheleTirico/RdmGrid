@@ -9,6 +9,7 @@ import org.graphstream.graph.Graph;
 import RdmGsaNetViz.handleVizStype;
 import RdmGsaNetViz.handleVizStype.stylesheet;
 import RdmSeedNet_2.framework.morphogen;
+import RdmSeedNet_2.framework.typeRadius;
 import RdmSeedNet_2.layerRd.typeDiffusion;
 
 import java.awt.geom.*;
@@ -41,7 +42,7 @@ class LifePanel extends JPanel implements ActionListener {
 	
 	static double g = 1, alfa = 2 , Ds = 1	, r = 10;
 	
-	layerRd lRd = new layerRd(1.0, 1.0, 200, 200);
+	layerRd lRd = new layerRd(1.0, 1.0, 200, 200, true , typeRadius.circle);
 	layerNet lNet = new layerNet() ;
 	layerSeed lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 	
@@ -83,8 +84,10 @@ class LifePanel extends JPanel implements ActionListener {
 		t++;
 
 		lRd.updateLayer();
-		lSeed.updateLayer();
-		lNet.updateLayer();	
+
+		
+		
+	
 		repaint();
 	}
 	

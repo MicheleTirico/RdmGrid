@@ -332,8 +332,8 @@ public class layerSeed extends framework {
 					if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
 						continue ;
 			
-				double 	distX = Math.pow(1+Math.abs(sY - y), 2) ,
-						distY = Math.pow(1+Math.abs(sX - x), 2); 
+				double 	distX = Math.pow(1+Math.abs(sY - y), alfa) ,
+						distY = Math.pow(1+Math.abs(sX - x), alfa); 
 		
 				double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) ) / distY , 
 						addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
@@ -344,8 +344,8 @@ public class layerSeed extends framework {
 				if ( Double.isNaN(vecX))			vecX = 0 ;
 				if ( Double.isNaN(vecY))			vecY = 0 ;
 			}
-		vecX = checkValueVector2(vecX, .10) ;
-		vecY = checkValueVector2(vecY, .10) ;
+		vecX = checkValueVector2(vecX, .1) ;
+		vecY = checkValueVector2(vecY, .1) ;
 		
 		s.setVec( -vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;

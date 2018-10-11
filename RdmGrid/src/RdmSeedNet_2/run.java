@@ -20,32 +20,35 @@ import RdmSeedNet_2.framework.RdmType;
 import RdmSeedNet_2.framework.morphogen;
 import RdmSeedNet_2.framework.typeVectorField;
 import RdmSeedNet_2.layerNet.typeSetupLayer;
+import RdmSeedNet_2.layerRd.typeComputeMaxLocal;
 import RdmSeedNet_2.layerRd.typeDiffusion;
 import RdmSeedNet_2.layerRd.typeInitializationMaxLocal;
 
 public class run extends framework {
 
-	static double Da = 0.6 , Db = 0.2 ;	
-	static double g = 1, alfa = 2 , Ds = .01	, r = 1 ;
+//	static double Da = 0.2 , Db = 0.1 ;	
+	static double Da = 0.2 , Db = 0.1 ;	
+	static double g = 1, alfa = 2 , Ds = .1	, r = 2 ;
 	private static Viewer viewerNet , viewerLocMax ;
 	
 	public static void main(String[] args) {		
 		
-		isFeedBackModel(true , typeFeedbackModel.booleanCombinedImpact);
+		isFeedBackModel(false , typeFeedbackModel.booleanCombinedImpact);
 		
 		bks = new bucketSet(1, 1, 200, 200);
 		bks.initializeBukets();
 		
 		lRd = new layerRd(1, 1, 200, 200, true, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
-		lRd.setInitMaxLocal(typeInitializationMaxLocal.singlePoint , morphogen.b, true);
+		lRd.setInitMaxLocal(typeInitializationMaxLocal.allPointActive , typeComputeMaxLocal.wholeGrid , morphogen.b, true);
 			
-		setRdType ( RdmType.pulsatingSolitions ) ;	//	System.out.println(f + " " + k);
-		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreCost );
+		setRdType ( RdmType.U_SkateWorld) ;	//	System.out.println(f + " " + k);
+		lRd.setGsParameters(f, k, Da, Db, typeDiffusion.mooreWeigthed );
 		
-		double eps = - 0.15;
-		lRd.setFeedBackParameters(0.3 , 0.3 );
-		lRd.setFeedBackParameters(Da + eps, Da - eps, Da  , Db- eps, Db + eps, Db );
+		double eps =  - 0.05;
+		lRd.setFeedBackParameters(0.35 , 0.05 );
+		lRd.setFeedBackParameters(	Da - eps, Da + eps, Da -  eps , 
+									Db + eps, Db - eps, Db +  eps );
 
 		lNet = new layerNet("net") ;
 		Graph netGraph = lNet.getGraph();
@@ -53,11 +56,12 @@ public class run extends framework {
 		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 
-		initMultiCircle(1, 1, 50 , 120 ,120 , 2 , 5 );		
-		initMultiCircle(1, 1, 50 , 120 ,80 , 2 , 3 );
-		initMultiCircle(1, 1, 50 , 80 ,120 , 3 , 5 );		
-		initMultiCircle(1, 1, 50 , 80 ,80 , 3 , 3 );	
-		
+		initMultiCircle(1, 1, 50 , 100 ,100 , 2 , 4 );		
+//		initMultiCircle(1, 1, 50 , 120 ,120 , 2 , 5 );		
+//		initMultiCircle(1, 1, 50 , 120 ,80  , 2 , 3 );
+//		initMultiCircle(1, 1, 50 , 80  ,120 , 3 , 5 );		
+//		initMultiCircle(1, 1, 50 , 80  ,80  , 1 , 5 );	
+
 		lNet.setLengthEdges("length" , true );
 
 		// set file Source for file step		
@@ -83,7 +87,7 @@ public class run extends framework {
 			
 			lRd.updateLayer();
 			lRd.computeMaxLocal();
-			lNet.updateLayers_04(typeVectorField.slopeDistanceRadius , 2 , true , 5 );
+			lNet.updateLayers_05(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
 		//	Thread.sleep(1);
 			t++;
 		}

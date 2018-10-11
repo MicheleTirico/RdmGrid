@@ -64,168 +64,11 @@ public class layerNet extends framework {
 		System.out.println(bks.getListBucketNotEmpty().size() ) ;
 		
 	}
-	
-	public void updateLayers_01 ( typeVectorField typeVectorField ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
-	
-	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
-	ArrayList <Node> listNodeF = new ArrayList<Node>() ;
-	
-	for ( seed s : lSeed.getListSeeds() ) {
 		
-		// get old node
-		Node nodeS = s.getNode();	
-		
-		// get cooord of potential node
-		idNode = Integer.toString(idNodeInt)  ;
-		graph.addNode( idNode ) ; 
-		Node nodeF = graph.getNode(idNode ) ;
-		
-		// compute vector
-		double[] vec = lSeed.getVector(s , typeVectorField , typeRadius );	
-		s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-		
-		// set coordinates of new node
-		nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-		
-		// create edge
-		idEdge = Integer.toString(idEdgeInt+1 );
-		Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-		e.addAttribute("length", getDistGeom(nodeS,nodeF));
-		
-		// link seed to node
-		s.setNode(nodeF);
-		idNodeInt++;
-		idEdgeInt++;
-		
-		bks.putNode(nodeF);
-		listNodeF.add(nodeF);
-
-
-	}
-	listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));
-}
-
-	public void updateLayers_02 ( typeVectorField typeVectorField , double distTest, int depthMax ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
-	
-		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
-		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
-		
-		for ( seed s : lSeed.getListSeeds() ) {
-			
-			// get old node
-			Node nodeS = s.getNode();	
-			
-			// get cooord of potential node
-			idNode = Integer.toString(idNodeInt)  ;
-			graph.addNode( idNode ) ; 
-			Node nodeF = graph.getNode(idNode ) ;
-			
-			// compute vector
-			double[] vec = lSeed.getVector(s , typeVectorField , typeRadius  );	
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-			
-			// set coordinates of new node
-			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-			
-			// create edge
-			idEdge = Integer.toString(idEdgeInt+1 );
-			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-			e.addAttribute("length", getDistGeom(nodeS,nodeF));
-			
-			// link seed to node
-			s.setNode(nodeF);
-			idNodeInt++;
-			idEdgeInt++;
-			
-			bks.putNode(nodeF);
-		
-		
-		//	handleNear_01(nodeF, listSeedsToRemove, depth, distTest, s);
-			handleNear_04(nodeF, listSeedsToRemove, depthMax , distTest, s, dijkstra);
-		}
-		listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));
-	}
-
-	public void updateLayers_03 ( typeVectorField typeVectorField , double distTest, int depthMax ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
-	
-	Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
-	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
-	
-	for ( seed s : lSeed.getListSeeds() ) {
-		Node nodeF = null , nodeS = null ;
-		// get old node
-		nodeS = s.getNode();			
-		double[] 	vec = lSeed.getVector(s , typeVectorField , typeRadius   ) ;
-		
-		if ( s.getIntenVec() > 0.001 ) {
-			
-			// get cooord of potential node
-			idNode = Integer.toString(idNodeInt)  ;
-			graph.addNode( idNode ) ; 
-			nodeF = graph.getNode(idNode ) ;
-			
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-			
-			// set coordinates of new node
-			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-			
-			// create edge
-			idEdge = Integer.toString(idEdgeInt+1 );
-			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-			e.addAttribute("length", getDistGeom(nodeS,nodeF));
-			
-			// link seed to node
-			s.setNode(nodeF);
-			idNodeInt++;
-			idEdgeInt++;
-			
-			bks.putNode(nodeF);
-		}	
-		else {
-			nodeS.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-			nodeF = nodeS ;
-		}
-
-		dijkstra.setSource(nodeF);
-		dijkstra.init(graph);
-		dijkstra.compute();
-		
-		ArrayList <Node> listNodeInBks = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	
-
-		double distGeomTest = 100 ;
-		int distTopo  = 0 ;
-		Node nodeWin = null ;
-		for ( Node near : listNodeInBks ) {
-			double distGeom = getDistGeom(near, nodeF);
-			if ( distGeom < distTest && distGeom < distGeomTest && distGeom > 0.1 ) {
-				distGeomTest = distGeom ;
-				distTopo = dijkstra.getPath(near).size() - 2 ;
-				if ( distTopo > depthMax || distTopo == -2  ) {
-					nodeWin = near ;
-				}
-			}
-		}
-		if ( nodeWin !=null ) {// 		System.out.println(nodeF + " " + nodeWin +" " + getDistGeom(nodeWin, nodeF) + " " + ( dijkstra.getPath(nodeWin).size() - 2 ) + " " + depthMax);
-		
-			try {
-				idEdge = Integer.toString(idEdgeInt+1 );
-				Edge ed = graph.addEdge(idEdge, nodeWin , nodeF) ;
-				ed.addAttribute("length", getDistGeom(nodeWin,nodeF));
-				listSeedsToRemove.add(s);
-		 		idEdgeInt++;	 		
-			 }
-			 catch (EdgeRejectedException e) {	 }			
-		}		
-	}			
-	listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));
-}
-	
 	public void updateLayers_04 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
-		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
-	//	System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
+		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); //	System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
 		
 		if (createSeed) 
 			createSeed_03(minDistSeed);
@@ -266,7 +109,7 @@ public class layerNet extends framework {
 			
 			bks.putNode(nodeF);
 				
-			double inten = getDistGeom(nodeS, nodeF) ;
+			double inten = Math.min(0.1 , getDistGeom(nodeS, nodeF) ) ;
 				
 			ArrayList <Node> listNodeInBks = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	
 			Node nodeWin = null ;
@@ -299,70 +142,99 @@ public class layerNet extends framework {
 		else 
 			listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));		
 	}
+
+	public void updateLayers_05 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
-	//create seed with remove cell 
-	private void createSeed_01 (double minDistSeed) {  System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());		
-		ArrayList <cell> listCellToRemove = new ArrayList<cell>(); 
-		for ( cell c : lRd.getListMaxLocal() ) {	
-			double[] coordC = new double[] { c.getX() , c.getY()} ;		//	System.out.println(c.getX() +" " + c.getY());
-			Node nearest = getNearestNode(coordC, bks.getNodesInRadius(coordC, 1) ) ;	
-			if ( nearest != null ) {		//	System.out.println(nearest);
-				double[] coordNearest = GraphPosLengthUtils.nodePosition(nearest) ;		
-				if ( getDistGeom(coordNearest, coordC) < minDistSeed ) {
-					lSeed.createSeed(coordNearest[0], coordNearest[1], nearest);				
-					listCellToRemove.add(c);
-				}
-			}
-		}
-		listCellToRemove.stream().forEach(c->lRd.removeMaxLocal(c));
-	}
+	Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
+	ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); //	System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
 	
-	//create seed without remove cell 
-	private void createSeed_02 (double minDistSeed) {  System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
-		for ( cell c : lRd.getListMaxLocal() ) {	
-			double[] coordC = new double[] { c.getX() , c.getY()} ;		//	System.out.println(c.getX() +" " + c.getY());
-			Node nearest = getNearestNode(coordC, bks.getNodesInRadius(coordC, 1) ) ;	
-			if ( nearest != null ) {		
-				double[] coordNearest = GraphPosLengthUtils.nodePosition(nearest) ;		
-				if ( getDistGeom(coordNearest, coordC) < minDistSeed ) {
-					lSeed.createSeed(coordNearest[0], coordNearest[1], nearest);					
-				}
-			}
-		}
-	}
+	if (createSeed) 
+		createSeed_03(minDistSeed);
 	
-	//create seed without remove cell check degree
-	private void createSeed_04 (double minDistSeed) {  System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
-		for ( cell c : lRd.getListMaxLocal() ) {	
-			double[] coordC = new double[] { c.getX() , c.getY()} ;		//	System.out.println(c.getX() +" " + c.getY());
-			Node nearest = getNearestNode(coordC, bks.getNodesInRadius(coordC, 1) ) ;	
+	for ( seed s : lSeed.getListSeeds() ) {
 		
-			if ( nearest != null ) {
-				ArrayList<Node> listNeig = new ArrayList<Node> (getListNeighbors(nearest , true) );
-				
-				int hasSeed = 0 , pos = 0 , degree = 0 ;
-				
-				while ( hasSeed == 0 && degree == 2 && pos <listNeig.size()) {
-					Node n = listNeig.get(pos);
-					degree = n.getDegree();
-					hasSeed = n.getAttribute("seed");
-					pos++;
-				}
-				
-				if ( hasSeed == 0 || degree == 2  ) {
-					pos = 0 ;
-				}
-			}
-		}
-				
-					
-					
+		lSeed.setSeedInCell(s, false);
 		
-				
+		Node nodeS , nodeF ;
+		// get old node
+		nodeS = s.getNode();	
+		
+		// get cooord of potential node
+		idNode = Integer.toString(idNodeInt)  ;
+		graph.addNode( idNode ) ; 
+		nodeF = graph.getNode(idNode ) ;
+		if ( isFeedBackModel)
+			lNet.setNodeInCell(nodeF, true );
+		
+		// compute vector
+		double[] vec = lSeed.getVector(s , typeVectorField, typeRadius );	
+		
+		s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
+		lSeed.setSeedInCell(s, true);
+		
+		// set coordinates of new node
+		nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
+		
+		// create edge
+		idEdge = Integer.toString(idEdgeInt+1 );
+		Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
+		e.addAttribute("length", getDistGeom(nodeS,nodeF)); 
+		
+		// link seed to node
+		s.setNode(nodeF);
+		idNodeInt++;
+		idEdgeInt++;
+		
+		bks.putNode(nodeF);
+			
+		// compute length vector
+		double inten = Math.min(0.1 , getDistGeom(nodeS, nodeF) ) ;
+			
+		// get node in buckets near nodeF
+		ArrayList <Node> listNodeInBks = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	
+		Node nodeNear = null ;
+		
+		// nearest node to nodeF
+		for( Node n : listNodeInBks) 
+			if ( getDistGeom(n, nodeF ) < inten && !n.equals(nodeS) ) {
+				nodeNear = n ;
+				break ;	
+			}	
+		
+		
 			
 		
-			
-		
+		if( nodeNear != null  && nodeNear != nodeS ) {
+			if ( depthMax == 0) {
+				try {
+					idEdge = Integer.toString(idEdgeInt+1 );
+					Edge ed = graph.addEdge(idEdge, nodeNear , nodeF) ;
+					ed.addAttribute("length", getDistGeom(nodeNear,nodeF));
+					listSeedsToRemove.add(s);	
+					idEdgeInt++;	 
+				} catch (EdgeRejectedException ex) {				}
+			}
+			else {		
+				dijkstra.setSource(nodeF);		
+				dijkstra.init(graph);
+				dijkstra.compute();
+			try {
+				idEdge = Integer.toString(idEdgeInt+1 );
+				Edge ed = graph.addEdge(idEdge, nodeNear , nodeF) ;
+				ed.addAttribute("length", getDistGeom(nodeNear,nodeF));	
+				idEdgeInt++;	 
+				int distTopo = dijkstra.getPath(nodeNear).size() - 2 ;
+				if ( distTopo >= depthMax || distTopo == - 2 ) 
+					listSeedsToRemove.add(s);								
+			}
+			 catch (EdgeRejectedException ex) {	 }			
+			}
+		}
+	}
+	if ( isFeedBackModel )
+		listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s , true ));
+	else 
+		listSeedsToRemove.stream().forEach(s-> lSeed.removeSeed(s));			
 	}
 	
 	//create seed without remove cell check degree and seed neig
@@ -380,222 +252,6 @@ public class layerNet extends framework {
 				}
 			}
 		}
-	}
-	
-	private void handleNewNode_01 (Node nodeF , Node nodeS , seed s , typeVectorField typeVectorField ) {
-		// get old node
-		nodeS = s.getNode();	
-		
-		// get cooord of potential node
-		idNode = Integer.toString(idNodeInt)  ;
-		graph.addNode( idNode ) ; 
-		nodeF = graph.getNode(idNode ) ;
-		
-		// compute vector
-		double[] vec = lSeed.getVector(s , typeVectorField , typeRadius   );	
-		s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-		
-		// set coordinates of new node
-		nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-		
-		// create edge
-		idEdge = Integer.toString(idEdgeInt+1 );
-		Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-		e.addAttribute("length", getDistGeom(nodeS,nodeF));
-		
-		// link seed to node
-		s.setNode(nodeF);
-		idNodeInt++;
-		idEdgeInt++;
-		
-		bks.putNode(nodeF);
-		
-	}
-	
-	private void handleNewNode_02 (Node nodeF , Node nodeS , seed s , typeVectorField typeVectorField ) {
-		// get old node
-		nodeS = s.getNode();			
-		double[] 	vec = lSeed.getVector(s , typeVectorField , typeRadius   ) ;
-		
-		if ( s.getIntenVec() > 0.001 ) {
-			
-			// get cooord of potential node
-			idNode = Integer.toString(idNodeInt)  ;
-			graph.addNode( idNode ) ; 
-			nodeF = graph.getNode(idNode ) ;
-			
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-			
-			// set coordinates of new node
-			nodeF.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-			
-			// create edge
-			idEdge = Integer.toString(idEdgeInt+1 );
-			Edge e = graph.addEdge(idEdge, nodeS , nodeF) ;
-			e.addAttribute("length", getDistGeom(nodeS,nodeF));
-			
-			// link seed to node
-			s.setNode(nodeF);
-			idNodeInt++;
-			idEdgeInt++;
-			
-			bks.putNode(nodeF);
-		}	
-		else {
-			nodeS.setAttribute("xyz", s.getX()+ vec[0], s.getY() + vec[1] , 0);
-			s.setCoords(s.getX() + vec[0] , s.getY() + vec[1]);	
-			nodeF = nodeS ;
-		}
-	}
-	
-	private void handleNear_03 (Node nodeF , ArrayList<seed> listSeedsToRemove , int depthMax , double distTest, seed s  ,  Dijkstra dijkstra) {
-		ArrayList <Node> listNearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	 
-		ArrayList <Node> listNodeToConnect = new ArrayList<Node>(listNearestNodes) ;		
-		Map<Node,Double> mapNodeDist = new HashMap<Node,Double> (getMapNodeDist(nodeF, listNearestNodes, listNearestNodes.size()) );		 
-		ArrayList <Node> nearestNodesDist = new ArrayList <Node> (mapNodeDist.keySet() );
-		
-		int depth = 0 , pos = 0 ;
-		double dist = 0 ;
-		Node next = null ;
-		dijkstra.setSource(nodeF); 
-		dijkstra.init(graph); 
-		dijkstra.compute();
-		 
-		Iterator<? extends Node> iter = nodeF.getBreadthFirstIterator() ; 
-		while ( iter.hasNext() 
-				&& depth < depthMax 
-				|| dist < distTest
-				&& pos < nearestNodesDist.size() 
-				&& nearestNodesDist.contains(next)
-				) {	
-			next = iter.next();
-			depth = dijkstra.getPath(next).size() - 2 ;
-			dist = getDistGeom(next, nodeF);
-		//	System.out.println(next +" " + depth + " " + dist);
-			listNodeToConnect.remove(next);
-			pos++ ;
-		}
-		listNodeToConnect.remove(nodeF);
-		if (! listNodeToConnect.isEmpty() ) {
-			Node near = getNearestNode (nodeF, listNodeToConnect);
-			try {
-				idEdge = Integer.toString(idEdgeInt+1 );
-				Edge ed = graph.addEdge(idEdge, near , nodeF) ;
-				ed.addAttribute("length", getDistGeom(near,nodeF));
-				listSeedsToRemove.add(s);
-		 		idEdgeInt++;
-			 }
-			 catch (EdgeRejectedException e) { e.printStackTrace();
-				// TODO: handle exception
-			}			
-		}
-	}
-
-	private void handleNear_04 (Node nodeF , ArrayList<seed> listSeedsToRemove , int depthMax , double distTest, seed s  ,  Dijkstra dijkstra) {
-
-		ArrayList <Node> oldList = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;	
-		ArrayList <Node> listNearestNodes = new ArrayList<Node>(oldList) ;
-//		for ( Node n : oldList ) 			if ( getDistGeom(n, nodeF) >= 0.2 ) 		listNearestNodes.remove(n);
-
-		dijkstra.setSource(nodeF);
-		dijkstra.init(graph);
-		dijkstra.compute();
-		int depth = 0 ; 
-		for ( Node near : listNearestNodes ) {
-			depth = dijkstra.getPath(near).size() - 2 ;
-			if ( depth >= depthMax || depth == -2 ) {
-				if ( getDistGeom(near , nodeF) <= distTest )
-				try {
-					idEdge = Integer.toString(idEdgeInt+1 );
-					Edge ed = graph.addEdge(idEdge, near , nodeF) ;
-					ed.addAttribute("length", getDistGeom(near,nodeF));
-					listSeedsToRemove.add(s);
-			 		idEdgeInt++;
-			 		break ;
-				 }
-				 catch (EdgeRejectedException e) { e.printStackTrace();
-					// TODO: handle exception
-				}
-			}
-			
-		}
-		
-	 
-	}
-	
-	private void handleNear_02 (Node nodeF , ArrayList<seed> listSeedsToRemove , int depthMax , double distTest, seed s  ,  Dijkstra dijkstra) {
-		 ArrayList <Node> listNearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ;
-		 Map<Node,Double> mapNodeDist = new HashMap<Node,Double> (getMapNodeDist(nodeF, listNearestNodes, listNearestNodes.size()) );
-		 ArrayList <Node> nearestNodesDist = new ArrayList <Node> (mapNodeDist.keySet() );
-	
-//		 System.out.println(listNearestNodes);
-//		 System.out.println(mapNodeDist);	 
-//		 System.out.println(nearestNodesDist);
-		 
-		 dijkstra.setSource(nodeF);
-		 dijkstra.init(graph);
-		 dijkstra.compute();
-		 Node near = null ;
-		 int  pos = 0 , depth = 0 ;
-		 double distGeom = 0 ;
-		/*
-		 while (
-//				 distGeom > 0.1 &&  
-//				 depth > 10 &&
-				 pos < nearestNodesDist.size()  ) {
-			near =  nearestNodesDist.get(pos);
-			depth = dijkstra.getPath(near).size() - 2 ;
-			
-			distGeom = mapNodeDist.get(near);
-
-			if (  distGeom > 0.1 &&  depth > 10  ) {
-				nodeTest.add(near);
-				break;
-			}
-			pos++;
-		 }
-		 */
-		 while ( pos < nearestNodesDist.size()  ) {
-			near =  nearestNodesDist.get(pos);	
-			distGeom = mapNodeDist.get(near);
-			if (  distGeom > distTest ) {
-			
-				depth = dijkstra.getPath(near).size() - 2 ;
-				if (  depth > depthMax  ) {		
-					System.out.println(near + " " + depth + " "+ distGeom + depth ); 
-					 try {
-						idEdge = Integer.toString(idEdgeInt+1 );
-						Edge ed = graph.addEdge(idEdge, near , nodeF) ;
-						ed.addAttribute("length", getDistGeom(near,nodeF));
-						listSeedsToRemove.add(s);
-				 		idEdgeInt++;
-					 }
-					 catch (EdgeRejectedException e) { e.printStackTrace();
-						// TODO: handle exception
-					}
-				}
-				break ;
-			}
-			pos++;
-		 } 
-	}
-	
-	private void handleNear_01 (Node nodeF , ArrayList<seed> listSeedsToRemove , int depth, double distTest, seed s  ) {
-		  ArrayList <Node> listNearestNodes = new ArrayList<Node>(bks.getNodesInRadius(nodeF, 1)) ,
-	        		listNodeInDepth = new ArrayList<Node>(getListNodesInDepth(nodeF , depth )) ,
-	        		listNodesNear = new ArrayList<Node>(listNearestNodes) ;
-	    
-		  listNodesNear.removeAll(listNodeInDepth);
-		    
-		  Node near = getNearestNode(nodeF, listNodesNear) ;
-		    
-		  if ( near != null && getDistGeom(near, nodeF) < distTest ) {
-			idEdge = Integer.toString(idEdgeInt+1 );
-			Edge ed = graph.addEdge(idEdge, near , nodeF) ;
-			ed.addAttribute("length", getDistGeom(near,nodeF));
-			listSeedsToRemove.add(s);
-	 		idEdgeInt++;		
-		  }
 	}
 			
 // SETUP LAYER --------------------------------------------------------------------------------------------------------------------------------------
@@ -699,15 +355,6 @@ public class layerNet extends framework {
 		cell c = lRd.getCell(n);
 		c.setHasNode(hasNode);
 	}
-	
-//	public void setNodeInCell ( Node n , boolean hasNode , layerRd.typeNeighbourhood typeNeighbourhood ) {
-//		cell c = lRd.getCell(n);
-//		c.setHasNode(hasNode);
-//		for ( cell ce : lRd.getListNeighbors(typeNeighbourhood, c.getX(), c.getY()) ) 
-//			ce.setHasNode(hasNode);
-//	}
-//	
-	
 	
 // GET EDGES ----------------------------------------------------------------------------------------------------------------------------------------
 	// get length edge
