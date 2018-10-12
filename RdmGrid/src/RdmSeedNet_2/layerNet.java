@@ -65,11 +65,11 @@ public class layerNet extends framework {
 		
 	}
 		
-	public void updateLayers_04 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
+	public void updateLayers_04 ( typeVectorField typeVectorField ,  int depthMax  , boolean createSeed , double minDistSeed   ) { 
+		System.out.println("numberNodes "+ graph.getNodeCount() +"\n"+"numberSeeds "+ lSeed.getListSeeds().size());	
 	
 		Dijkstra dijkstra = new Dijkstra(Element.EDGE, "length", "length") ; 
-		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); //	System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
-		
+		ArrayList<seed> listSeedsToRemove  = new ArrayList<seed> (); 
 		if (createSeed) 
 			createSeed_03(minDistSeed);
 		
@@ -200,10 +200,7 @@ public class layerNet extends framework {
 				nodeNear = n ;
 				break ;	
 			}	
-		
-		
-			
-		
+
 		if( nodeNear != null  && nodeNear != nodeS ) {
 			if ( depthMax == 0) {
 				try {
@@ -238,8 +235,9 @@ public class layerNet extends framework {
 	}
 	
 	//create seed without remove cell check degree and seed neig
-	private void createSeed_03 (double minDistSeed) {  System.out.println("numberMaxLo " + lRd.getNumberCellMaxLocal());
-		for ( cell c : lRd.getListMaxLocal() ) {	
+	private void createSeed_03 (double minDistSeed) { 
+		
+		for ( cell c : lMl.getListMaxLoc()) {	
 			double[] coordC = new double[] { c.getX() , c.getY()} ;		//	System.out.println(c.getX() +" " + c.getY());
 			Node nearest = getNearestNode(coordC, bks.getNodesInRadius(coordC, 1) ) ;	
 			if ( nearest != null ) {

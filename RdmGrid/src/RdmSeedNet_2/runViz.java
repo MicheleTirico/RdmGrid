@@ -5,6 +5,7 @@ import java.awt.event.*;
 import javax.swing.*;
 
 import RdmSeedNet_2.framework.morphogen;
+import RdmSeedNet_2.framework.typeRadius;
 import RdmSeedNet_2.layerRd.typeDiffusion;
 
 import java.awt.geom.*;
@@ -35,7 +36,7 @@ class LifePanel extends JPanel implements ActionListener{
 	static double  f = 0.030, k=0.062, Da = 0.2, Db = 0.1 ;	
 	static double g = 1, alfa = 2 , Ds = 1	, r = 5;
 	
-	private static layerRd lRd = new layerRd(1.0, 0, 150, 150, true , ty);
+	private static layerRd lRd = new layerRd(1.0, 0, 150, 150, true , typeRadius.circle);
 	protected static layerSeed lSeed = new layerSeed();
 
 	protected static layerNet lNet = new layerNet() ;
@@ -86,7 +87,7 @@ class LifePanel extends JPanel implements ActionListener{
 		lRd.updateLayer();
 		//	lSeed.updateLayer();
 		//	lNet.updateLayer();
-			lNet.updateLayerAndSeeds();
+
 		repaint();
 		t++;
 	}

@@ -525,6 +525,10 @@ public class layerSeed extends framework {
 		return seeds;		
 	}
 	
+	public int getNumSeeds () {
+		return seeds.size();
+	}
+	
 	public ArrayList<Node> getListNodeWithSeed ( ) {
 		ArrayList<Node> list = new ArrayList<Node> ();
 		for ( seed s : seeds) {

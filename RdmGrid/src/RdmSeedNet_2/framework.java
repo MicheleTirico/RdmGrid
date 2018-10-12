@@ -7,6 +7,8 @@ import javax.swing.JPanel;
 import org.graphstream.graph.Node;
 import org.graphstream.ui.graphicGraph.GraphPosLengthUtils;
 
+import dataAnalyze.analyzeNetwork;
+
 public abstract class framework  {
 	
 	protected static boolean isFeedBackModel;
@@ -17,11 +19,11 @@ public abstract class framework  {
 	protected static layerRd lRd = new layerRd();
 	protected static layerNet lNet = new layerNet() ;
 	protected static bucketSet bks = new bucketSet() ;
+	protected static layerMaxLoc lMl = new layerMaxLoc();
 	
-	protected static int idNodeInt  ;
-	protected static int idEdgeInt ;
-	protected static String idNode ;
-	protected static String idEdge;
+	
+	protected static int idNodeInt , idEdgeInt , idMaxLocInt;
+	protected static String idNode, idEdge , idMaxLoc ;
 	protected static double  f , k  ;
 	
 	public enum typeRadius { square , circle}
