@@ -21,6 +21,7 @@ public abstract class framework  {
 	protected static bucketSet bks = new bucketSet() ;
 	protected static layerMaxLoc lMl = new layerMaxLoc();
 	
+	protected static String idPattern ;
 	
 	protected static int idNodeInt , idEdgeInt , idMaxLocInt;
 	protected static String idNode, idEdge , idMaxLoc ;
@@ -59,9 +60,9 @@ public abstract class framework  {
 	}
 	
 	// set RD start values to use in similtion ( gsAlgo )
-	protected static void setRdType ( RdmType f055k062 ) {
+	protected static void setRdType ( RdmType pattern ) {
 		
-		switch ( f055k062 ) {
+		switch ( pattern ) {
 			case holes: 				{ f = 0.039 ; k = 0.058 ; } 
 										break ;
 			case solitions :			{ f = 0.030 ; k = 0.062 ; } 
@@ -85,6 +86,10 @@ public abstract class framework  {
 			case waves :				{ f = 0.014 ; k = 0.045 ; } 
 										break ;		
 		}
+		
+		idPattern = pattern.toString();
+		
+		
 	}
 	
 	public static void isFeedBackModel ( boolean isFbM , typeFeedbackModel  type ) {

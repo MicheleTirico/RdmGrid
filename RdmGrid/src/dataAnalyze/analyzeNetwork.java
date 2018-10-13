@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import org.graphstream.algorithm.Toolkit;
 import org.graphstream.graph.Graph;
 import org.graphstream.graph.implementations.SingleGraph;
 
@@ -16,64 +17,90 @@ import scala.Array;
 public class analyzeNetwork extends analyze {
 	
 	private Graph graph = new SingleGraph("grToAn");	
-	private String 	header , nameFile , nameFolder , path  ;
-	FileWriter fileWriter ;
-	
+	private String 	header , nameFile  , path , pathNetAn ;
+	private FileWriter fileWriter ;
 	private handleFolder hF ;
-	private String pathNetAn;
-	public analyzeNetwork () throws IOException {
-		this(null, null, null, null);
-	}
-
+	private boolean run ; 
 	
-	public analyzeNetwork(Graph graph, String path , String nameFolder , String nameFile ) throws IOException {
+	public analyzeNetwork () throws IOException {
+		this(false ,null, null, null, null);
+	}
+	
+	public analyzeNetwork(boolean run ,Graph graph, String path , String nameFolder , String nameFile ) throws IOException {
+		this.run = run ;
 		this.graph = graph ;
-		this.path = path;
-		this.nameFolder = nameFolder ;
+		this.path = path +"\\"+ nameFolder + "\\";
 		this.nameFile = nameFile;
 		hF = new handleFolder(path) ;
 		pathNetAn = hF.createNewGenericFolder(nameFolder);
-		
-		System.out.println(path);
-		fileWriter = new FileWriter( path + nameFile + ".csv" , true );		
-		expCsv.addCsv_header( fileWriter, header ) ;
 	}
 	
+	public void test ( ) throws IOException {	
+	}
 	
+	public void initAnalysis ( ) throws IOException {
+		if ( run )
+			for ( indicator in : listIndicators ) {
+				in.setId(in.toString());
+				in.setFw(path +nameFile+"_"+ in + ".csv" );
+				header = in.toString();
+				expCsv.addCsv_header( in.getFw(), header ) ;
+			}
+	}
+		
+// COMPUTE SINGLE INDICATOR -------------------------------------------------------------------------------------------------------------------------
 	public void computeSeedCount (int step) throws IOException {
-		header = "testHeader";
-		int val = lSeed.getNumSeeds();
-		System.out.println(Arrays.asList( Double.toString(step) , Double.toString(val)));
+		indicator in = indicator.seedCount ;
+		fileWriter = in.getFw() ;
+		double val = getValIndicator(in) ;
 		expCsv.writeLine(fileWriter, Arrays.asList( Double.toString(step) , Double.toString(val) ) , ';' ) ;
 	}
 	
+	public void computeAverageDegree (int step) throws IOException {
+		indicator in = indicator.averageDegree ;
+		fileWriter = in.getFw() ;
+		double val = getValIndicator(in) ;
+		expCsv.writeLine(fileWriter, Arrays.asList( Double.toString(step) , Double.toString(val) ) , ';' ) ;
+	}
+	
+	public void computeGammaIndex (int step) throws IOException {
+		indicator in = indicator.gammaIndex ;
+		fileWriter = in.getFw() ;
+		double val = getValIndicator(in) ;
+		expCsv.writeLine(fileWriter, Arrays.asList( Double.toString(step) , Double.toString(val) ) , ';' ) ;
+	}
+		
+	// compute all indicators
+	public void computeIndicators ( int t) throws IOException {
+		if ( run ) 
+			for ( indicator in : listIndicators ) {
+				fileWriter = in.getFw() ;
+				double val = getValIndicator(in) ;
+				expCsv.writeLine(fileWriter, Arrays.asList( Double.toString(t) , Double.toString(val) ) , ';' ) ;		
+			}		
+	}
+	
+	// close file writer
 	public void closeFileWriter () throws IOException {
-		fileWriter.close();
+		if  ( run ) 
+			for ( indicator in : listIndicators)
+				in.getFw().close();
 	}
-	
-	private void createCsv ( ) {
-		
-	}
-	
-	public void computeIndicators ( ) {
-		for ( indicator in : listIndicators ) {
-			
-			computeIn( in ) ;
-			
-		}
-		
-	}
-	
-	public void computeIn ( indicator in ) {
-		
-		switch (in) {
-		case seedCount:
-			
-			break;
 
-		default:
+	public double getValIndicator ( indicator in ) {
+		double val = 0;
+		switch (in) {
+		case seedCount: 
+			val = lSeed.getNumSeeds();
 			break;
+		case averageDegree :
+			val = Toolkit.averageDegree(graph); ;
+			break ;
+		case gammaIndex:
+			val = getGammaIndex(graph, true) ;
+			break;		
 		}
+		return val ;
 	}
 	
 // SET METHODS --------------------------------------------------------------------------------------------------------------------------------------
@@ -84,5 +111,21 @@ public class analyzeNetwork extends analyze {
 	public void setIndicators (ArrayList<indicator> list ) {
 		listIndicators.addAll(list) ;
 	}
-
+// COMPUTE INDICATORS -------------------------------------------------------------------------------------------------------------------------------
+	// gamma index
+	private static double getGammaIndex ( Graph graph , boolean isPlanar ) {	
+		double  n = graph.getNodeCount() , 
+				e = graph.getEdgeCount() ,
+				eMax = 0 ;
+		
+		if ( isPlanar )
+			eMax = 3 * n - 6 ; 
+		else 
+			eMax = ( n - 1 ) * n / 2 ;
+		
+		if ( eMax == 0 || e == 0)	
+			return 0 ;
+		else 
+			return e / eMax ;
+	}
 }
