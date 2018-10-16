@@ -27,7 +27,7 @@ import RdmSeedNet.layerRd.typeNeighbourhood;
 
 
 public class layerNet extends framework {
-
+ 
 	private boolean setLengthEdges ;
 	private int numNodes  ;
 	private double radius;
@@ -500,7 +500,7 @@ public class layerNet extends framework {
 			Node neig = iter.next() ;		//		System.out.println(neig.getId() + neig.getAttributeKeySet());
 			if ( !listNeig.contains(neig) )
 				listNeig.add(neig);
-		}
+		} 
 		listNeig.remove(node) ;
 		return listNeig ;
 	}

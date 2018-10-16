@@ -51,10 +51,14 @@ public class bucketSet extends framework {
 	
 	// get bucket contain coords X Y  
 	private bucket getBucket (double X , double Y ) {
-		double x =  sizeX * (int) ( X / sizeX );
-		double y =  sizeY * (int) ( Y / sizeY ) ;		    	
-	    return buckets[(int)x] [(int)y];    
-	}
+		try {
+			double x =  sizeX * (int) ( X / sizeX );
+			double y =  sizeY * (int) ( Y / sizeY ) ;		    	
+		    return buckets[(int)x] [(int)y];     
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return null ;
+		}
+		}
 
 	// get list nodes in radius
 	protected ArrayList<Node> getNodesInRadius ( Node n , double radius ) { 

@@ -33,17 +33,18 @@ import dataAnalyze.storeNetwork;
 import dataAnalyze.analyze.indicator;
 
 public class runAndAnalyze extends framework {
-
+ 
+	private static int sizeGrid = 200 ;
 	private static double Da = 0.2 , Db = 0.1 ;	
 	private static double g = 1, alfa = 2 , Ds = .1	, r = 2 ;
 	private static String  path = "D:\\ownCloud\\RdmGrid_exp" ;
 
 	public static void main(String[] args) throws IOException {	
 		
-		bks = new bucketSet(1, 1, 200, 200);
+		bks = new bucketSet(1, 1, sizeGrid, sizeGrid);
 		bks.initializeBukets();
 
-		lRd = new layerRd(1, 1, 200, 200, true, typeRadius.circle);		
+		lRd = new layerRd(1, 1, sizeGrid, sizeGrid, true, typeRadius.circle);		
 		lRd.initializeCostVal(1,0);	
 			
 		setRdType ( RdmType.mazes) ;	
@@ -57,15 +58,20 @@ public class runAndAnalyze extends framework {
 		Graph graphLoc = lMl.getGraph() ;
 		
 		analyzeNetwork aN = new analyzeNetwork(false , netGraph, path, "analyzeNet", idPattern) ;		
-		aN.setIndicators(new ArrayList<indicator> ( Arrays.asList(indicator.averageDegree,indicator.gammaIndex, indicator.seedCount)));
+		aN.setIndicators(new ArrayList<indicator> ( Arrays.asList(	indicator.averageDegree,
+																	indicator.gammaIndex, 
+																	indicator.seedCount )));
+
 		aN.initAnalysis();
 		
-		storeNetwork sN = new storeNetwork(true, netGraph, path, "dsg", "net_") ;
+		storeNetwork sN = new storeNetwork(false, netGraph, path, "dsg", idPattern +"_net_") ;
 		sN.initStore();
 	
+		staticSympleNetwork sSn = new staticSympleNetwork(netGraph);
+		
 		lSeed = new layerSeed(g, alfa, Ds, r , morphogen.b );
 
-		initMultiCircle(1, 1, 50 , 100 ,100 , 2 , 4 );		
+		initMultiCircle(1, 1, 50 , sizeGrid/2 ,sizeGrid/2, 2 , 4 );		
 		
 		lNet.setLengthEdges("length" , true );
 		// setup viz netGraph
@@ -73,25 +79,34 @@ public class runAndAnalyze extends framework {
 		netViz.setupIdViz(false , netGraph, 20 , "black");
 		netViz.setupDefaultParam (netGraph, "black", "black", 1 , 0.5 );
 		netViz.setupVizBooleanAtr(true, netGraph, "black", "red" , false , false ) ;
-		netViz.setupFixScaleManual( true , netGraph, 500 , 0);
+		netViz.setupFixScaleManual( true , netGraph, sizeGrid , 0);
 		
 		netGraph.display(false);	
 				
 		int t = 0 ;
-		while ( t < 5 && ! lSeed.getListSeeds().isEmpty()  ) {	
+		while ( t <= 10000 && ! lSeed.getListSeeds().isEmpty()  ) {	
 			System.out.println("------------- step " +t);
-			lRd.updateLayer();
-			lMl.updateLayer();
-			lNet.updateLayers_05(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
-		
-			aN.computeIndicators(t);
-			sN.storeDSGStep(t);
-			t++;
+			try { 
+				lRd.updateLayer();
+				lMl.updateLayer();
+				lNet.updateLayers_05(typeVectorField.slopeDistanceRadius , 0 , true , 1 );
+			
+				aN.computeIndicators(t);
+				sN.storeDSGStep(t);
+				t++;
+			}
+			catch (NullPointerException e) {
+				break ;
+			}
 		}
 		
 		aN.closeFileWriter();
 		sN.closeStore();
 		
+		sSn.compute();
+		
+		
+		System.out.println( sSn.getGraph().getNodeCount()) ;
 		
 		// only for viz
 		for ( seed s : lSeed.getListSeeds()) 	

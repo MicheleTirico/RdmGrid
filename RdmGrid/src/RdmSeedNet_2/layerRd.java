@@ -382,8 +382,12 @@ public class layerRd extends framework   {
 	}
 	
 	public cell getCell (int X , int Y) {
-		return  cells[X][Y]; 
-	}
+		try {
+			return  cells[X][Y]; 
+		} catch (ArrayIndexOutOfBoundsException e) {
+			return null ;
+		}
+	} 
 	
 	public cell getCell ( double[] coords) {
 		try {

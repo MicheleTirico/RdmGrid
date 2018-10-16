@@ -316,7 +316,7 @@ public class layerSeed extends framework {
 			}
 		vecX = checkValueVector2(vecX, .50) ;
 		vecY = checkValueVector2(vecY, .50) ;
-		
+		 
 		s.setVec( -vecX, -vecY);
 		return new double[] {-vecX ,-vecY} ;
 	}
@@ -326,24 +326,29 @@ public class layerSeed extends framework {
 		double sX = s.getX() , sY = s.getY() , vecX = 0 , vecY = 0 ;
 		for ( int x = (int) Math.floor(s.getX() -r ) ; x <= (int) Math.ceil(s.getX() + r ); x++ )
 			for ( int y = (int) Math.floor(s.getY() -r ) ; y <= (int) Math.ceil(s.getY() + r ); y++ ) {	
+				try {
+					cell c = lRd.getCell(x,y);
+					if ( typeRadius.equals(typeRadius.circle)) 
+						if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
+							continue ;
 				
-				cell c = lRd.getCell(x,y);
-				if ( typeRadius.equals(typeRadius.circle)) 
-					if ( Math.pow(Math.pow(c.getX() - s.getX(), 2) + Math.pow(c.getY() - s.getY(), 2),0.5) > r ) 
-						continue ;
+					double 	distX = Math.pow(1+Math.abs(sY - y), alfa) ,
+							distY = Math.pow(1+Math.abs(sX - x), alfa); 
 			
-				double 	distX = Math.pow(1+Math.abs(sY - y), alfa) ,
-						distY = Math.pow(1+Math.abs(sX - x), alfa); 
-		
-				double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) ) / distY , 
-						addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
-				
-				vecX = vecX + addVecX ;
-				vecY = vecY + addVecY ;		
-				
-				if ( Double.isNaN(vecX))			vecX = 0 ;
-				if ( Double.isNaN(vecY))			vecY = 0 ;
-			}
+					double 	addVecX = ( lRd.getValMorp(lRd.getCell(x+1,y), m, true) - lRd.getValMorp(lRd.getCell(x-1,y), m, true) ) / distY , 
+							addVecY = ( lRd.getValMorp(lRd.getCell(x,y+1), m, true) - lRd.getValMorp(lRd.getCell(x,y-1), m, true) ) / distX ;
+					
+					vecX = vecX + addVecX ;
+					vecY = vecY + addVecY ;		
+					
+					if ( Double.isNaN(vecX))			vecX = 0 ;
+					if ( Double.isNaN(vecY))			vecY = 0 ;
+				} catch (NullPointerException e) {
+					// TODO: handle exception
+				}
+					
+				}
+			
 		vecX = checkValueVector2(vecX, .1) ;
 		vecY = checkValueVector2(vecY, .1) ;
 		
